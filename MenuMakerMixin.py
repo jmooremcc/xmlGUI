@@ -10,6 +10,7 @@ from functools import partial
         <menuitem name='' onclick='' />
     </menu>
     <optionmenu name='' id='' default=''/>
+         <radioitem name='' value='' onclick='' default=''/>
         .
         .
         .
