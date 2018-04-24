@@ -3,13 +3,14 @@
 import xml.etree.ElementTree as ET
 from Tkinter import *
 from functools import partial
+from PIL import Image, ImageTk
 
 """
 <menus>
     <menu name='' type=''>
         <menuitem name='' onclick='' />
     </menu>
-    <optionmenu name='' id='' default=''/>
+    <optionmenu name='' id='' default='' dataprovider=''/>
          <radioitem name='' value='' onclick='' default=''/>
         .
         .
@@ -17,20 +18,45 @@ from functools import partial
 </menus>
 """
 
+#Tag Constants
+MENU            = 'menu'
+MENUS           = 'menus'
+MENUITEM        = 'menuitem'
+OPTIONMENU      = 'optionmenu'
+RADIOITEM       = 'radioitem'
+MENUBUTTON      = 'menubutton'
+# Attribute Constants
+NAME            = 'name'
+TYPE            = 'type'
+ONCLICK         = 'onclick'
+ID              = 'id'
+DEFAULT         = 'default'
+VALUE           = 'value'
+DATAPROVIDER    = 'dataprovider'
+IMAGE           = 'image'
+
 class MenuMakerMixin(object):
-    def __init__(self, parent, xmlfile):
+    def generateMenu(self, parent, xmlfile):
         tree = ET.parse(xmlfile)
         self.root = tree.getroot()
-        if self.root.tag != 'menus':
+        if self.root.tag != MENUS:
             raise Exception("%s does not containthe required menus tag" % xmlfile)
 
         self.menuItems={}
-        menu = Menu(parent)
+        menu = Menu(parent, tearoff=0)
         self.parseMenuTree(menu,self.root)
         parent.config(menu=menu)
+        # if self.__getattribute__('mb'):
+        #     return self.mb
+
+    def makeCommand(self, fnName, arg):
+        return partial(self.__getattribute__(fnName), arg)
+
+
+
 
     def processChildElement(self, newMenu, child, radiobuttonoptvar=None):
-            menuItemName = child.attrib['name']
+            menuItemName = child.attrib[NAME]
             kwargs = {}
             kwargs['label'] = menuItemName
 
@@ -41,75 +67,91 @@ class MenuMakerMixin(object):
                     kwargs['accelerator'] = shortcut
                     kwargs['underline'] = 0
 
-                if 'onclick' in child.attrib:
-                    onclickCallbackName = child.attrib['onclick']
-                    kwargs['command'] = partial(self.__getattribute__(onclickCallbackName), menuItemName)
+                if ONCLICK in child.attrib:
+                    onclickCallbackName = child.attrib[ONCLICK]
+                    kwargs['command'] = self.makeCommand(onclickCallbackName, menuItemName)
 
                 newMenu.add_command(**kwargs)
 
             else:
                 optvar=radiobuttonoptvar
                 kwargs['variable'] = optvar
-                kwargs['value'] = child.attrib['value']
+                kwargs[VALUE] = child.attrib[VALUE]
 
-                if 'onclick' in child.attrib:
-                    callback = child.attrib['onclick']
-                    kwargs['command'] = partial(self.__getattribute__(callback), kwargs['value'])
+                if ONCLICK in child.attrib:
+                    callback = child.attrib[ONCLICK]
+                    kwargs['command'] = self.makeCommand(callback, kwargs[VALUE])
 
                 newMenu.add_radiobutton(**kwargs)
 
-                if 'default' in child.attrib:
-                    optvar.set(kwargs['value'])
+                if DEFAULT in child.attrib:
+                    optvar.set(kwargs[VALUE])
+
+    def processOptionMenu(self, parent, optmenu, child):
+        id = child.attrib[ID]
+        setattr(self, id, optmenu)
+        optvar = StringVar()
+        setattr(self, id + 'Var', optvar)
+
+        if len(child) == 0:
+            if DATAPROVIDER in child.attrib:
+                funcName = child.attrib[DATAPROVIDER]
+                self.__getattribute__(funcName)(optvar, optmenu, self.noop)
+            # self.fillOptionValues(newMenu,self.noop)
+        else:
+            for childopt in child:
+                self.processChildElement(optmenu, childopt, radiobuttonoptvar=optvar)
 
 
 
 
     def parseMenuTree(self, parent, elem):
-        if elem.tag == 'menu':
+        if elem.tag == MENU:
             print("menu: %s " % elem.tag)
-            menuName = elem.attrib['name']
+            menuName = elem.attrib[NAME]
             newMenu = Menu(parent, tearoff=0)
             parent.add_cascade(label=menuName, menu=newMenu)
             print("menuName: %s" % menuName)
-            if 'type' in elem.attrib:
+            if TYPE in elem.attrib:
                 menuType = elem.attrib[type]
                 print("menu type is %s" % menuType)
             else:
                 pass
 
             for child in elem:
-                if child.tag == 'menu':
+                if child.tag == MENU:
                     self.parseMenuTree(newMenu, child)
+
                 elif child.tag == 'separator':
                     newMenu.add_separator()
-                elif child.tag == 'optionmenu':
-                    id=child.attrib['id']
+
+                elif child.tag == OPTIONMENU:
                     optmenu = Menu(parent, tearoff=0)
-                    newMenu.add_cascade(label=child.attrib['name'], menu=optmenu)
-                    setattr(self,id,optmenu)
-                    if len(child.items()) == 0:
-                        self.fillOptionValues(newMenu,self.noop)
-                    else:
-                        optvar = StringVar()
-                        setattr(self,id+'Var',optvar)
-                        for childopt in child:
-                            self.processChildElement(optmenu,childopt,radiobuttonoptvar=optvar)
+                    newMenu.add_cascade(label=child.attrib[NAME], menu=optmenu)
+                    self.processOptionMenu(parent, optmenu, child)
                 else:
                     self.processChildElement(newMenu, child)
 
-        elif elem.tag == 'menus':
+        elif elem.tag == MENUS:
             for child in elem:
-                if child.tag == 'menuitem':
+                if child.tag == MENUITEM:
                     self.processChildElement(parent, child)
                 else:
                     self.parseMenuTree(parent, child)
+
+        elif elem.tag == OPTIONMENU:
+            menuName = elem.attrib[NAME]
+            optmenu = Menu(parent, tearoff=0)
+            parent.add_cascade(label=menuName, menu=optmenu)
+            self.processOptionMenu(parent, optmenu, elem)
+
         else:
            raise Exception("tag: %s is not a menu tag" % elem.tag)
            #  self.processChildElement(parent, elem)
 
-    def fillOptionValues(self, optmenu, callback):
+    def fillOptionValues(self, optvar, optmenu, callback):
         values=['OE2','OE3','LocalHost']
-        optvar = StringVar()
+        optvar.set(values[0])
 
         for item in values:
             optmenu.add_radiobutton(label=item, variable=optvar, value=item,
@@ -125,7 +167,25 @@ class MenuMakerMixin(object):
     def quit(self, *arg):
         exit()
 
+
+def createIcon(imgFilename):
+    image = Image.open(imgFilename)
+    image = image.resize((30, 30), Image.ANTIALIAS)
+    # setattr(self, iconVarname, ImageTk.PhotoImage(image))
+    return ImageTk.PhotoImage(image)
+
 if __name__ == "__main__":
     root = Tk()
-    m1 = MenuMakerMixin(root, "menu.xml")
+    icon = createIcon('gearIcon.png')
+
+    frame = Frame(root)
+    mb = Menubutton(frame, bg='sky blue', image=icon, relief=RIDGE, activebackground='green')
+    mb.menu = Menu(mb, tearoff=0)
+    # mb.menu.add_command(label="myTest")
+    mb.pack(side=LEFT, fill=BOTH)
+    # setattr(self, name, mb)
+    # parent.add_cascade(menu=mb)
+    frame.pack(side=TOP, fill=BOTH)
+    m1 = MenuMakerMixin()
+    m1.generateMenu(mb, "menu2.xml")
     root.mainloop()
