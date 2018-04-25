@@ -4,14 +4,32 @@ import xml.etree.ElementTree as ET
 from Tkinter import *
 from functools import partial
 from PIL import Image, ImageTk
+import Tkconstants
+from time import sleep
 
 """
 <menus>
     <menu name='' type=''>
-        <menuitem name='' onclick='' />
+        name is menu name
+        type is ...
+        
+        <menuitem name='' onclick='' shortcutindex="" />
+            name is menuitem name
+            onclick is name of function to call when the item is clicked and must be in the current scope
+            shortcutindex is the index of the letter in the menuitem name to use as an accellerator
+            Note: both onclick and shortcutindex must be defined to activate the accellerator
     </menu>
-    <optionmenu name='' id='' default='' dataprovider=''/>
+    <optionmenu name='' id='' dataprovider=''/>
+            name is optionmenu name
+            id is the name to use for the dynamically created variable name that represents the optionmenu
+            dataprovider is the function that will load the options
+               if dataprovider is missing, radioitems should be used to provide the options
+               
          <radioitem name='' value='' onclick='' default=''/>
+            name is the radioitem name
+            value is the data to pass as an argument to the onclick function
+            onclick is the function to call when the item is clicked and must be in the current scope
+            default if present indicates this item is the default item and will display a check mark
         .
         .
         .
@@ -25,6 +43,8 @@ MENUITEM        = 'menuitem'
 OPTIONMENU      = 'optionmenu'
 RADIOITEM       = 'radioitem'
 MENUBUTTON      = 'menubutton'
+SEPARATOR       = 'separator'
+# PACKARGS        = 'packargs'
 # Attribute Constants
 NAME            = 'name'
 TYPE            = 'type'
@@ -34,26 +54,36 @@ DEFAULT         = 'default'
 VALUE           = 'value'
 DATAPROVIDER    = 'dataprovider'
 IMAGE           = 'image'
+UNDERLINE       = 'underline'
+SHORTCUTINDEX   = 'shortcutindex'
+COMMAND         = 'command'
+RELIEF          = 'relief'
+VARIABLE        = 'variable'
 
 class MenuMakerMixin(object):
-    def generateMenu(self, parent, xmlfile):
+    def __init__(self, topLevelWidget):
+        self.topLevelWidget = topLevelWidget
+
+    def generateMenu(self,xmlfile, parent=None ):
         tree = ET.parse(xmlfile)
         self.root = tree.getroot()
         if self.root.tag != MENUS:
-            raise Exception("%s does not containthe required menus tag" % xmlfile)
+            raise Exception("%s does not contain the required menus tag" % xmlfile)
 
-        self.menuItems={}
-        menu = Menu(parent, tearoff=0)
-        self.parseMenuTree(menu,self.root)
-        parent.config(menu=menu)
-        # if self.__getattribute__('mb'):
-        #     return self.mb
+        self.topmenu = None
 
-    def makeCommand(self, fnName, arg):
+        if self.root[0].tag == MENUBUTTON:
+            self.parseMenuTree(parent, self.root)
+        else:
+            menu = Menu(parent, tearoff=0)
+            self.parseMenuTree(menu, self.root)
+            if parent is not None:
+                parent.config(menu=menu)
+
+            return menu
+
+    def makeCommand(self, fnName, arg=None):
         return partial(self.__getattribute__(fnName), arg)
-
-
-
 
     def processChildElement(self, newMenu, child, radiobuttonoptvar=None):
             menuItemName = child.attrib[NAME]
@@ -61,26 +91,30 @@ class MenuMakerMixin(object):
             kwargs['label'] = menuItemName
 
             if radiobuttonoptvar == None:
-                shortcut = None
-                if 'shortcut' in child.attrib:
-                    shortcut = child.attrib['shortcut']
-                    kwargs['accelerator'] = shortcut
-                    kwargs['underline'] = 0
+                shortcutIndex = False
+                if SHORTCUTINDEX in child.attrib:
+                    shortcutIndex = True
+                    chIndex = int(child.attrib[SHORTCUTINDEX])
+                    ch = menuItemName[chIndex].upper()
+                    kwargs['accelerator'] = "Ctrl+" + ch
+                    kwargs[UNDERLINE] = chIndex
 
                 if ONCLICK in child.attrib:
                     onclickCallbackName = child.attrib[ONCLICK]
-                    kwargs['command'] = self.makeCommand(onclickCallbackName, menuItemName)
+                    kwargs[COMMAND] = self.makeCommand(onclickCallbackName, menuItemName)
+                    if shortcutIndex:
+                        self.topLevelWidget.bind_all("<Control-%s>" % ch.lower(), kwargs[COMMAND])
 
                 newMenu.add_command(**kwargs)
 
             else:
                 optvar=radiobuttonoptvar
-                kwargs['variable'] = optvar
+                kwargs[VARIABLE] = optvar
                 kwargs[VALUE] = child.attrib[VALUE]
 
                 if ONCLICK in child.attrib:
                     callback = child.attrib[ONCLICK]
-                    kwargs['command'] = self.makeCommand(callback, kwargs[VALUE])
+                    kwargs[COMMAND] = self.makeCommand(callback, kwargs[VALUE])
 
                 newMenu.add_radiobutton(**kwargs)
 
@@ -110,6 +144,18 @@ class MenuMakerMixin(object):
             print("menu: %s " % elem.tag)
             menuName = elem.attrib[NAME]
             newMenu = Menu(parent, tearoff=0)
+            # packArgs = elem.find(PACKARGS)
+            # if packArgs is not None:
+            #     kwargs = packArgs.attrib
+            #     for key in kwargs:
+            #         value = kwargs[key]
+            #         kwargs[key]=Tkconstants.__getattribute__(value)
+            #
+            #     newMenu.pack(kwargs)
+
+            if self.topmenu is None:
+                self.topmenu = newMenu
+
             parent.add_cascade(label=menuName, menu=newMenu)
             print("menuName: %s" % menuName)
             if TYPE in elem.attrib:
@@ -122,14 +168,14 @@ class MenuMakerMixin(object):
                 if child.tag == MENU:
                     self.parseMenuTree(newMenu, child)
 
-                elif child.tag == 'separator':
+                elif child.tag == SEPARATOR:
                     newMenu.add_separator()
 
                 elif child.tag == OPTIONMENU:
                     optmenu = Menu(parent, tearoff=0)
                     newMenu.add_cascade(label=child.attrib[NAME], menu=optmenu)
                     self.processOptionMenu(parent, optmenu, child)
-                else:
+                elif child.tag == MENUITEM:
                     self.processChildElement(newMenu, child)
 
         elif elem.tag == MENUS:
@@ -145,6 +191,34 @@ class MenuMakerMixin(object):
             parent.add_cascade(label=menuName, menu=optmenu)
             self.processOptionMenu(parent, optmenu, elem)
 
+        elif elem.tag == MENUBUTTON:
+            # import Tkconstants
+            kwargs = elem.attrib
+            imageFile = kwargs[IMAGE]
+            menuName = kwargs[NAME]
+            kwargs[RELIEF] = Tkconstants.__getattribute__(kwargs[RELIEF])
+            kwargs[NAME] = menuName.lower()
+            icon = createIcon(imageFile)
+            kwargs[IMAGE] = icon
+
+            frame = Frame(parent)
+            # mb = Menubutton(frame, bg='sky blue', relief=RIDGE, activebackground='green')
+            mb = Menubutton(frame, **kwargs)
+            mb['text']='XXX'
+            mb.menu = menu = Menu(mb, tearoff=0)
+            mb["menu"] = mb.menu
+            mb["image"] = icon
+            setattr(self, menuName+"Img", icon)
+            mb.config(image=icon)
+
+            for child in elem:
+                if child.tag == MENUITEM:
+                    self.processChildElement(menu, child)
+                else:
+                    self.parseMenuTree(menu, child)
+
+            mb.pack(side=LEFT, fill=BOTH)
+            frame.pack(side=TOP, fill=BOTH)
         else:
            raise Exception("tag: %s is not a menu tag" % elem.tag)
            #  self.processChildElement(parent, elem)
@@ -170,22 +244,38 @@ class MenuMakerMixin(object):
 
 def createIcon(imgFilename):
     image = Image.open(imgFilename)
-    image = image.resize((30, 30), Image.ANTIALIAS)
+    image2 = image.resize((30, 30), Image.ANTIALIAS)
     # setattr(self, iconVarname, ImageTk.PhotoImage(image))
-    return ImageTk.PhotoImage(image)
+    return ImageTk.PhotoImage(image2)
 
 if __name__ == "__main__":
     root = Tk()
-    icon = createIcon('gearIcon.png')
+    root.geometry("200x100")
+    # icon = createIcon('gearIcon.png')
 
-    frame = Frame(root)
-    mb = Menubutton(frame, bg='sky blue', image=icon, relief=RIDGE, activebackground='green')
-    mb.menu = Menu(mb, tearoff=0)
-    # mb.menu.add_command(label="myTest")
-    mb.pack(side=LEFT, fill=BOTH)
+    # frame = Frame(root)
+    # mb = Menubutton(frame, bg='sky blue', image=icon, relief=RIDGE, activebackground='green')
+    # # mb.menu = Menu(mb, tearoff=0)
+    # # mb.menu.add_command(label="myTest")
+    # mb.pack(side=LEFT, fill=BOTH)
     # setattr(self, name, mb)
     # parent.add_cascade(menu=mb)
-    frame.pack(side=TOP, fill=BOTH)
-    m1 = MenuMakerMixin()
-    m1.generateMenu(mb, "menu2.xml")
+    # frame.pack(side=TOP, fill=BOTH)
+    m1 = MenuMakerMixin(root)
+    # m1.generateMenu("menu2.xml", root)
+    val=m1.generateMenu("menu.xml", root)
+    # m1.generateMenu("menu2.xml", root)
+    m1.generateMenu("menu3.xml", root)
+    popupMenu = m1.generateMenu("menu4.xml")
+    def popup(*args):
+        if len(args) == 2:
+            popupMenu.post(args[0], args[1])
+        else:
+            event = args[0]
+            popupMenu.post(event.x_root, event.y_root)
+
+    b=Button(root,text="Popup Menu")
+    b.pack()
+    b[COMMAND]=lambda: popup(b.winfo_rootx()+30, b.winfo_rooty()+20)
+    root.bind_all('<Button-3>',popup)
     root.mainloop()

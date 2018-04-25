@@ -1,14 +1,16 @@
 <menus>
-  <menuitem name="Edit Default Channel List"/>
-  <menuitem name="Set Channel Group"/>
-  <menu name="Kodi Devices">
+  <menubutton name="Settings" bg="sky blue" image="gearIcon.png" relief="RIDGE" activebackground="green">
+    <menuitem name="Edit Default Channel List" shortcutindex="0" onclick="noop"/>
+    <menuitem name="Set Channel Group" shortcutindex="4" onclick="noop"/>
     <optionmenu name="Select Kodi Device" id="KodiOptions">
       <radioitem name="OE2" onclick="noop" value="OE2"/>
       <radioitem name="OE3" onclick="noop" value="OE3" default="true"/>
       <radioitem name="LocalHost" onclick="noop" value="LocalHost"/>
     </optionmenu>
-    <menuitem name="Add Kodi Device"/>
-    <menuitem name="Edit Kodi Device"/>
-    <menuitem name="Remove Kodi Device"/>
-  </menu>
+    <menu name="Kodi Devices">
+      <menuitem name="Add Kodi Device" shortcutindex="0" onclick="noop"/>
+      <menuitem name="Edit Kodi Device" shortcutindex="0" onclick="noop"/>
+      <menuitem name="Remove Kodi Device" shortcutindex="0" onclick="noop"/>
+    </menu>
+  </menubutton>
 </menus>
