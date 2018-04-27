@@ -17,3 +17,6 @@ class StringVarPlus(StringVar):
     @Name.setter
     def Name(self, value):
         self.name = value
+
+    def __repr__(self):
+        return "%s:%s" % (self.Name,self.get())

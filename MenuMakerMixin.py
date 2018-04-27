@@ -212,9 +212,19 @@ class MenuMakerMixin(object):
 
 
     def processOptionMenu(self, parent, optmenu, child):
+        """
+        Process either radiobutton or checkbutton option
+        :param parent: Menu
+        :param optmenu: Menu
+        :param child: element
+        :return:
+        """
         id = child.attrib[ID]
 
         if len(child) == 0:
+            """
+                Call a data provider since no children exist to provide options
+            """
             funcName = None
             if ONCLICK in child.attrib:
                 funcName = child.attrib[ONCLICK]
@@ -227,6 +237,9 @@ class MenuMakerMixin(object):
             self.__getattribute__(dataprovider)(optvar, optmenu, funcName, id)
             # self.fillOptionValues(newMenu,self.noop)
         else:
+            """
+                The options are provided by child optionitems
+            """
             try:
                 cbflag = self.getOptionMenuType(optmenu) == CHECKBUTTONITEM
                 if cbflag:
@@ -234,20 +247,40 @@ class MenuMakerMixin(object):
                         optvar = StringVarPlus()
                         self.addOptionVarRef(optvar, id)
                         self.processChildElement(optmenu, childopt, optionButtonOptvar=optvar)
-                else:
-                    optvar = StringVarPlus()
-                    self.addOptionVarRef(optvar, id)
-                    for childopt in child:
-                        self.processChildElement(optmenu, childopt, optionButtonOptvar=optvar)
 
-            except:
-                optvar = StringVarPlus()
-                self.addOptionVarRef(optvar, id)
-                for childopt in child:
-                    self.processChildElement(optmenu, childopt, optionButtonOptvar=optvar)
+                    return
+                # else:
+                #     optvar = StringVarPlus()
+                #     self.addOptionVarRef(optvar, id)
+                #     for childopt in child:
+                #         self.processChildElement(optmenu, childopt, optionButtonOptvar=optvar)
+
+            except Exception as e:
+                pass
+
+            optvar = StringVarPlus()
+            self.addOptionVarRef(optvar, id)
+            for childopt in child:
+                self.processChildElement(optmenu, childopt, optionButtonOptvar=optvar)
 
 
     def menuTag(self, parent, elem):
+        """
+        Process a menu tag by creating an instance of the Menu class and adds it as a submenu (cascade) to the parent
+        The function then processes the following child elements:
+            SEPARATOR tags
+                adds a separator to the menu
+            OPTIONMENU tags
+                call processOptionMenu to process option
+            MENU tags
+                call parseMenuTree recursively to handle it
+            MENUITEM tags
+                call processChildElement to handle it
+
+        :param parent: Menu
+        :param elem: Element
+        :return:
+        """
         print("menu: %s " % elem.tag)
         menuName = elem.attrib[NAME]
         newMenu = Menu(parent, tearoff=0)
@@ -263,6 +296,7 @@ class MenuMakerMixin(object):
         else:
             pass
 
+        #Process Child Elements
         for child in elem:
             if child.tag == MENU:
                 self.parseMenuTree(newMenu, child)
@@ -285,6 +319,13 @@ class MenuMakerMixin(object):
 
 
     def processSiblings(self, parent, elem):
+        """
+        Process an Element's children
+        if a non MENUITEM element is found, call parseMenuTree to handle it
+        :param parent: Menu
+        :param elem: Element
+        :return:
+        """
         for child in elem:
             if child.tag == MENUITEM:
                 self.processChildElement(parent, child)
@@ -309,6 +350,13 @@ class MenuMakerMixin(object):
 
 
     def optionmenuTag(self, parent, elem):
+        """
+        Create a new Menu object and add it to the parent as a submenu
+        call processOptionMenu to process options
+        :param parent: Menu
+        :param elem: Element
+        :return:
+        """
         id = elem.attrib[ID]
         menuName = elem.attrib[NAME]
         optmenu = Menu(parent, tearoff=0)
@@ -321,6 +369,13 @@ class MenuMakerMixin(object):
 
 
     def menubuttonTag(self, parent, elem):
+        """
+        Create a menubutton object with the image specified in the attributes
+        processSiblings is then called to process any child options
+        :param parent: Menu
+        :param elem: Element
+        :return:
+        """
         kwargs = elem.attrib
         imageFile = kwargs[IMAGE]
         menuName = kwargs[NAME]
@@ -343,9 +398,16 @@ class MenuMakerMixin(object):
 
         mb.pack(side=LEFT, fill=BOTH)
         frame.pack(side=TOP, fill=BOTH)
+        #TODO add PACKARGS item to control how the frame is packed
 
 
     def parseMenuTree(self, parent, elem):
+        """
+        This is a dispatcher function that calls the appropriate functions based on the element tag
+        :param parent: Menu or Window
+        :param elem: Element
+        :return:
+        """
         dispatcher = {
             MENUS: self.menusTag,
             MENU: self.menuTag,
@@ -359,12 +421,25 @@ class MenuMakerMixin(object):
 
 
     def fillOptionValues(self, optvar, optmenu, callback, id):
+        """
+        Sample dataprovider simulating getting option data from an external source
+        This provider would be called if no menu options are not specified
+        :param optvar: StringVarPlus
+        :param optmenu: Menu
+        :param callback: Callable
+        :param id: Option ID or Name
+        :return:
+        """
         values = ['OE2', 'OE3', 'LocalHost']
         optvar.set(values[0])
 
         try:
             cbflag = self.getOptionMenuType(optmenu) == CHECKBUTTONITEM
             if cbflag:
+                """
+                    Process checkbutton options
+                    checkbutton items must have their own StringVarPlus variable
+                """
                 for n, item in enumerate(values):
                     optvar = StringVarPlus()
                     self.addOptionVarRef(optvar, id)
@@ -381,17 +456,24 @@ class MenuMakerMixin(object):
                         optvar.set("%s:%s" % (item, True))
                     else:
                         optvar.set("%s:%s" % (item, False))
-            else:
-                for item in values:
-                    optmenu.add_radiobutton(label=item, variable=optvar, value=item,
-                                            command=self.makeCommand(callback, optvar))
+            # else:
+            #     for item in values:
+            #         optmenu.add_radiobutton(label=item, variable=optvar, value=item,
+            #                                 command=self.makeCommand(callback, optvar))
         except Exception as e:
-            for item in values:
-                optmenu.add_radiobutton(label=item, variable=optvar, value=item,
-                                        command=self.makeCommand(callback, optvar))
+            pass
+
+        for item in values:
+            optmenu.add_radiobutton(label=item, variable=optvar, value=item,
+                                    command=self.makeCommand(callback, optvar))
 
 
     def noop(self, *arg):
+        """
+        Sample onclick handler
+        :param arg:
+        :return:
+        """
         if len(arg) == 1:
             if type(arg) == tuple:
                 myarg = arg[0]
@@ -405,10 +487,20 @@ class MenuMakerMixin(object):
 
 
     def quit(self, *arg):
+        """
+        Sample onclick handler
+        :param arg:
+        :return:
+        """
         exit()
 
 
 def createIcon(imgFilename):
+    """
+    Converts an image into a bitmap that can be used on a menubutton
+    :param imgFilename: str
+    :return: ImageTk.PhotoImage
+    """
     image = Image.open(imgFilename)
     image2 = image.resize((30, 30), Image.ANTIALIAS)
     # setattr(self, iconVarname, ImageTk.PhotoImage(image))
