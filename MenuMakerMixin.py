@@ -444,41 +444,7 @@ class MenuMakerMixin(object):
         """
         values = ['OE2', 'OE3', 'LocalHost']
         return values
-        # optvar.set(values[0])
-        #
-        # try:
-        #     cbflag = self.getOptionMenuType(optmenu) == CHECKBUTTONITEM
-        #     if cbflag:
-        #         """
-        #             Process checkbutton options
-        #             checkbutton items must have their own StringVarPlus variable
-        #         """
-        #         for n, item in enumerate(values):
-        #             optvar = StringVarPlus()
-        #             self.addOptionVarRef(optvar, id)
-        #
-        #             if callback is None:
-        #                 optmenu.add_checkbutton(label=item, variable=optvar, onvalue="%s:%s" % (item, True),
-        #                                         offvalue="%s:%s" % (item, False))
-        #             else:
-        #                 optmenu.add_checkbutton(label=item, variable=optvar, onvalue="%s:%s" % (item, True),
-        #                                         offvalue="%s:%s" % (item, False),
-        #                                         command=self.makeCommand(callback, optvar))
-        #
-        #             if n == 0:
-        #                 optvar.set("%s:%s" % (item, True))
-        #             else:
-        #                 optvar.set("%s:%s" % (item, False))
-        #     # else:
-        #     #     for item in values:
-        #     #         optmenu.add_radiobutton(label=item, variable=optvar, value=item,
-        #     #                                 command=self.makeCommand(callback, optvar))
-        # except Exception as e:
-        #     pass
-        #
-        # for item in values:
-        #     optmenu.add_radiobutton(label=item, variable=optvar, value=item,
-        #                             command=self.makeCommand(callback, optvar))
+
 
 
     def noop(self, *arg):
