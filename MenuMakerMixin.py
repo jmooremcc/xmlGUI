@@ -22,13 +22,14 @@ from StringVarPlus import StringVarPlus
             Note: both onclick and shortcutindex must be defined to activate the accellerator
     </menu>
     
-    <optionmenu name='' id='' dataprovider='' typebutton=""/>
+    <optionmenu name='' id='' dataprovider='' typebutton="" defaultindex=""/>
             name is optionmenu name
             id is the name to use for the dynamically created variable name that represents the optionmenu
             dataprovider is the function that will load the options
                if dataprovider is missing, radioitems should be used to provide the options
             typebutton is the type of button to create. By default it's a radiobutton. If you specify a checkbutton,
                 you'll get a checkbutton created.
+            defaultindex is the index of the default item if the data comes from a datasource
             
     <optionitem name='' value='' onclick='' default=''/>
             name is the optionitem name
@@ -69,6 +70,8 @@ COMMAND = 'command'
 RELIEF = 'relief'
 VARIABLE = 'variable'
 TYPEBUTTON = 'typebutton'
+LABEL = 'label'
+DEFAULTINDEX = 'defaultindex'
 
 
 class MenuMakerMixin(object):
@@ -124,7 +127,7 @@ class MenuMakerMixin(object):
         else:
             return partial(self.__getattribute__(fnName), arg)
 
-    def processChildElement(self, newMenu, child, optionButtonOptvar=None):
+    def processChildElement(self, newMenu, child, optionButtonOptvar=None, cbflag=False):
         """
         Converts attributes into kwargs and adds a command to newMenu object
         :param newMenu: Menu
@@ -157,8 +160,6 @@ class MenuMakerMixin(object):
 
             newMenu.add_command(**kwargs)
 
-            return
-
         else:
             """
                 Process option menu - either radiobutton or checkbutton
@@ -172,46 +173,33 @@ class MenuMakerMixin(object):
                 kwargs[COMMAND] = self.makeCommand(callback, kwargs[VALUE])
 
             print("option-kwargs: %s" % kwargs)
-            try:
-                cbflag = self.getOptionMenuType(newMenu) == CHECKBUTTONITEM
-                if cbflag:
-                    """
-                        option item is a checkbutton
-                    """
-                    kwargs['onvalue'] = "%s:%s" % (value, True)
-                    kwargs['offvalue'] = "%s:%s" % (value, False)
-                    del (kwargs[VALUE])
-                    if DEFAULT in child.attrib:
-                        optvar.set(kwargs['onvalue'])
-                    else:
-                        optvar.set(kwargs['offvalue'])
 
-                    if COMMAND in kwargs:
-                        kwargs[COMMAND] = self.makeCommand(callback, optvar)
+            if cbflag:
+                """
+                    option item is a checkbutton
+                """
+                kwargs['onvalue'] = "%s:%s" % (value, True)
+                kwargs['offvalue'] = "%s:%s" % (value, False)
+                del (kwargs[VALUE])
+                if DEFAULT in child.attrib:
+                    optvar.set(kwargs['onvalue'])
+                else:
+                    optvar.set(kwargs['offvalue'])
 
-                    newMenu.add_checkbutton(**kwargs)
+                if COMMAND in kwargs:
+                    kwargs[COMMAND] = self.makeCommand(callback, optvar)
 
-                    return
+                newMenu.add_checkbutton(**kwargs)
 
-                # else:
-                    # newMenu.add_radiobutton(**kwargs)
-                    # if DEFAULT in child.attrib:
-                    #     optvar.set(kwargs[VALUE])
-
-            except Exception as e:
-                pass
-                # newMenu.add_radiobutton(**kwargs)
-                # if DEFAULT in child.attrib:
-                #     optvar.set(kwargs[VALUE])
-        """
-            option item is a radiobutton
-        """
-        newMenu.add_radiobutton(**kwargs)
-        if DEFAULT in child.attrib:
-            optvar.set(kwargs[VALUE])
+            else:
+                newMenu.add_radiobutton(**kwargs)
+                if DEFAULT in child.attrib:
+                    optvar.set(value)
 
 
-    def processOptionMenu(self, parent, optmenu, child):
+
+
+    def processOptionMenu(self, parent, optmenu, child, cbflag):
         """
         Process either radiobutton or checkbutton option
         :param parent: Menu
@@ -220,48 +208,121 @@ class MenuMakerMixin(object):
         :return:
         """
         id = child.attrib[ID]
+        kwargs = {}
 
         if len(child) == 0:
             """
                 Call a data provider since no children exist to provide options
             """
-            funcName = None
-            if ONCLICK in child.attrib:
-                funcName = child.attrib[ONCLICK]
 
             if DATAPROVIDER in child.attrib:
-                dataprovider = child.attrib[DATAPROVIDER]
+                if ONCLICK in child.attrib:
+                    funcName = child.attrib[ONCLICK]
+                    kwargs[COMMAND]=self.makeCommand(funcName)
 
-            optvar = StringVarPlus()
-            self.addOptionVarRef(optvar, id)
-            self.__getattribute__(dataprovider)(optvar, optmenu, funcName, id)
-            # self.fillOptionValues(newMenu,self.noop)
+                try:
+                    dataprovider = self.makeCommand(child.attrib[DATAPROVIDER])
+                    olist = dataprovider()
+
+                except Exception as e:
+                    print e.message
+                    raise(e)
+
+                defaultindex = 0
+
+                if DEFAULTINDEX in child.attrib:
+                    defaultindex = int(child.attrib[DEFAULTINDEX])
+
+                if cbflag:
+                    for n, opName in enumerate(olist):
+                        kwargs['onvalue'] = "%s:%s" % (opName, True)
+                        kwargs['offvalue'] = "%s:%s" % (opName, False)
+                        optvar = StringVarPlus()
+                        kwargs[VARIABLE] = optvar
+                        self.addOptionVarRef(optvar, id)
+                        kwargs[LABEL] = kwargs[VALUE] = opName
+                        if n == defaultindex:
+                            optvar.set(kwargs['onvalue'])
+                        else:
+                            optvar.set(kwargs['offvalue'])
+
+                        optmenu.add_checkbutton(**kwargs)
+                else:
+                    try:
+                        optvar = StringVarPlus()
+                        kwargs[VARIABLE] = optvar
+                        self.addOptionVarRef(optvar, id)
+                        if COMMAND in kwargs:
+                            kwargs[COMMAND] = self.makeCommand(funcName, optvar)
+
+                        for n, opName in enumerate(olist):
+                            kwargs[LABEL] = kwargs[VALUE] = opName
+                            if n == defaultindex:
+                                optvar.set(olist[n])
+
+                            optmenu.add_radiobutton(**kwargs)
+                    except Exception as e:
+                        pass
         else:
             """
                 The options are provided by child optionitems
             """
-            try:
-                cbflag = self.getOptionMenuType(optmenu) == CHECKBUTTONITEM
-                if cbflag:
-                    for childopt in child:
-                        optvar = StringVarPlus()
-                        self.addOptionVarRef(optvar, id)
-                        self.processChildElement(optmenu, childopt, optionButtonOptvar=optvar)
+            if cbflag:
+                for childopt in child:
+                    optvar = StringVarPlus()
+                    self.addOptionVarRef(optvar, id)
+                    self.processChildElement(optmenu, childopt, optionButtonOptvar=optvar, cbflag=cbflag)
+            else:
+                optvar = StringVarPlus()
+                self.addOptionVarRef(optvar, id)
+                for childopt in child:
+                    self.processChildElement(optmenu, childopt, optionButtonOptvar=optvar, cbflag=cbflag)
+            # if cbflag:
+            #     for childopt in child:
+            #         if ONCLICK in childopt.attrib:
+            #             funcName = childopt.attrib[ONCLICK]
+            #             kwargs[COMMAND] = funcName
+            #
+            #         opName = childopt.attrib[NAME]
+            #         kwargs['onvalue'] = "%s:%s" % (opName, True)
+            #         kwargs['offvalue'] = "%s:%s" % (opName, False)
+            #
+            #         optvar = StringVarPlus()
+            #         kwargs[VARIABLE] = optvar
+            #         self.addOptionVarRef(optvar, id)
+            #
+            #         if DEFAULT in childopt.attrib:
+            #             optvar.set(kwargs['onvalue'])
+            #         else:
+            #             optvar.set(kwargs['offvalue'])
+            #
+            #         optmenu.add_checkbutton(**kwargs)
+            #         # self.processChildElement(optmenu, childopt, optionButtonOptvar=optvar)
+            #
+            # else:
+            #     optvar = StringVarPlus()
+            #     kwargs[VARIABLE] = optvar
+            #     self.addOptionVarRef(optvar, id)
+            #
+            #     for childopt in child:
+            #         if ONCLICK in childopt.attrib:
+            #             funcName = childopt.attrib[ONCLICK]
+            #             kwargs[COMMAND] = funcName
+            #
+            #         if DEFAULT in childopt.attrib:
+            #             optvar.set(kwargs['onvalue'])
+            #         else:
+            #             optvar.set(kwargs['offvalue'])
+            #
+            #         optmenu.add_radiobutton(**kwargs)
+                    # self.processChildElement(optmenu, childopt, optionButtonOptvar=optvar)
 
-                    return
-                # else:
-                #     optvar = StringVarPlus()
-                #     self.addOptionVarRef(optvar, id)
-                #     for childopt in child:
-                #         self.processChildElement(optmenu, childopt, optionButtonOptvar=optvar)
 
-            except Exception as e:
-                pass
 
-            optvar = StringVarPlus()
-            self.addOptionVarRef(optvar, id)
-            for childopt in child:
-                self.processChildElement(optmenu, childopt, optionButtonOptvar=optvar)
+            # optvar = StringVarPlus()
+            # self.addOptionVarRef(optvar, id)
+            # for childopt in child:
+            #     self.processChildElement(optmenu, childopt, optionButtonOptvar=optvar)
 
 
     def menuTag(self, parent, elem):
@@ -308,11 +369,13 @@ class MenuMakerMixin(object):
                 # id=elem.attrib[ID]
                 optmenu = Menu(parent, tearoff=0)
 
+                cbflag = False
                 if TYPEBUTTON in child.attrib:
-                    self.setOptionMenuType(newMenu, child.attrib[TYPEBUTTON])
+                    if child.attrib[TYPEBUTTON] == CHECKBUTTONITEM:
+                        cbflag = True
 
                 newMenu.add_cascade(label=child.attrib[NAME], menu=optmenu)
-                self.processOptionMenu(parent, optmenu, child)
+                self.processOptionMenu(parent, optmenu, child, cbflag)
 
             elif child.tag == MENUITEM:
                 self.processChildElement(newMenu, child)
@@ -341,12 +404,12 @@ class MenuMakerMixin(object):
         pass
 
 
-    def getOptionMenuType(self, optmenu):
-        return optmenu.__dict__[TYPEBUTTON]
-
-
-    def setOptionMenuType(self, optmenu, value):
-        optmenu.__dict__[TYPEBUTTON] = value
+    # def getOptionMenuType(self, optmenu):
+    #     return optmenu.__dict__[TYPEBUTTON]
+    #
+    #
+    # def setOptionMenuType(self, optmenu, value):
+    #     optmenu.__dict__[TYPEBUTTON] = value
 
 
     def optionmenuTag(self, parent, elem):
@@ -360,12 +423,12 @@ class MenuMakerMixin(object):
         id = elem.attrib[ID]
         menuName = elem.attrib[NAME]
         optmenu = Menu(parent, tearoff=0)
-        # self.optionMenusList[id]=optmenu
-        if TYPEBUTTON in elem.attrib:
-            self.setOptionMenuType(optmenu, elem.attrib[TYPEBUTTON])
+        cbflag=False
+        if elem.attrib[TYPEBUTTON] == CHECKBUTTONITEM:
+            cbflag = True
 
         parent.add_cascade(label=menuName, menu=optmenu)
-        self.processOptionMenu(parent, optmenu, elem)
+        self.processOptionMenu(parent, optmenu, elem, cbflag)
 
 
     def menubuttonTag(self, parent, elem):
@@ -420,52 +483,48 @@ class MenuMakerMixin(object):
             raise Exception("tag: %s is not a menu tag" % elem.tag)
 
 
-    def fillOptionValues(self, optvar, optmenu, callback, id):
+    def myDataprovider(self):
         """
         Sample dataprovider simulating getting option data from an external source
-        This provider would be called if no menu options are not specified
-        :param optvar: StringVarPlus
-        :param optmenu: Menu
-        :param callback: Callable
-        :param id: Option ID or Name
-        :return:
+        :return: list[str]
         """
         values = ['OE2', 'OE3', 'LocalHost']
-        optvar.set(values[0])
-
-        try:
-            cbflag = self.getOptionMenuType(optmenu) == CHECKBUTTONITEM
-            if cbflag:
-                """
-                    Process checkbutton options
-                    checkbutton items must have their own StringVarPlus variable
-                """
-                for n, item in enumerate(values):
-                    optvar = StringVarPlus()
-                    self.addOptionVarRef(optvar, id)
-
-                    if callback is None:
-                        optmenu.add_checkbutton(label=item, variable=optvar, onvalue="%s:%s" % (item, True),
-                                                offvalue="%s:%s" % (item, False))
-                    else:
-                        optmenu.add_checkbutton(label=item, variable=optvar, onvalue="%s:%s" % (item, True),
-                                                offvalue="%s:%s" % (item, False),
-                                                command=self.makeCommand(callback, optvar))
-
-                    if n == 0:
-                        optvar.set("%s:%s" % (item, True))
-                    else:
-                        optvar.set("%s:%s" % (item, False))
-            # else:
-            #     for item in values:
-            #         optmenu.add_radiobutton(label=item, variable=optvar, value=item,
-            #                                 command=self.makeCommand(callback, optvar))
-        except Exception as e:
-            pass
-
-        for item in values:
-            optmenu.add_radiobutton(label=item, variable=optvar, value=item,
-                                    command=self.makeCommand(callback, optvar))
+        return values
+        # optvar.set(values[0])
+        #
+        # try:
+        #     cbflag = self.getOptionMenuType(optmenu) == CHECKBUTTONITEM
+        #     if cbflag:
+        #         """
+        #             Process checkbutton options
+        #             checkbutton items must have their own StringVarPlus variable
+        #         """
+        #         for n, item in enumerate(values):
+        #             optvar = StringVarPlus()
+        #             self.addOptionVarRef(optvar, id)
+        #
+        #             if callback is None:
+        #                 optmenu.add_checkbutton(label=item, variable=optvar, onvalue="%s:%s" % (item, True),
+        #                                         offvalue="%s:%s" % (item, False))
+        #             else:
+        #                 optmenu.add_checkbutton(label=item, variable=optvar, onvalue="%s:%s" % (item, True),
+        #                                         offvalue="%s:%s" % (item, False),
+        #                                         command=self.makeCommand(callback, optvar))
+        #
+        #             if n == 0:
+        #                 optvar.set("%s:%s" % (item, True))
+        #             else:
+        #                 optvar.set("%s:%s" % (item, False))
+        #     # else:
+        #     #     for item in values:
+        #     #         optmenu.add_radiobutton(label=item, variable=optvar, value=item,
+        #     #                                 command=self.makeCommand(callback, optvar))
+        # except Exception as e:
+        #     pass
+        #
+        # for item in values:
+        #     optmenu.add_radiobutton(label=item, variable=optvar, value=item,
+        #                             command=self.makeCommand(callback, optvar))
 
 
     def noop(self, *arg):
@@ -494,6 +553,11 @@ class MenuMakerMixin(object):
         """
         exit()
 
+    def dumpOptvars(self, opt):
+        olist = self.getOptionVars()
+        print ""
+        for v in olist:
+            print "%s:%s" % (v.Name, v.get())
 
 def createIcon(imgFilename):
     """
