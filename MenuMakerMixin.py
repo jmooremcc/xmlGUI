@@ -229,7 +229,6 @@ class MenuMakerMixin(object):
                     raise(e)
 
                 defaultindex = 0
-
                 if DEFAULTINDEX in child.attrib:
                     defaultindex = int(child.attrib[DEFAULTINDEX])
 
@@ -277,52 +276,7 @@ class MenuMakerMixin(object):
                 self.addOptionVarRef(optvar, id)
                 for childopt in child:
                     self.processChildElement(optmenu, childopt, optionButtonOptvar=optvar, cbflag=cbflag)
-            # if cbflag:
-            #     for childopt in child:
-            #         if ONCLICK in childopt.attrib:
-            #             funcName = childopt.attrib[ONCLICK]
-            #             kwargs[COMMAND] = funcName
-            #
-            #         opName = childopt.attrib[NAME]
-            #         kwargs['onvalue'] = "%s:%s" % (opName, True)
-            #         kwargs['offvalue'] = "%s:%s" % (opName, False)
-            #
-            #         optvar = StringVarPlus()
-            #         kwargs[VARIABLE] = optvar
-            #         self.addOptionVarRef(optvar, id)
-            #
-            #         if DEFAULT in childopt.attrib:
-            #             optvar.set(kwargs['onvalue'])
-            #         else:
-            #             optvar.set(kwargs['offvalue'])
-            #
-            #         optmenu.add_checkbutton(**kwargs)
-            #         # self.processChildElement(optmenu, childopt, optionButtonOptvar=optvar)
-            #
-            # else:
-            #     optvar = StringVarPlus()
-            #     kwargs[VARIABLE] = optvar
-            #     self.addOptionVarRef(optvar, id)
-            #
-            #     for childopt in child:
-            #         if ONCLICK in childopt.attrib:
-            #             funcName = childopt.attrib[ONCLICK]
-            #             kwargs[COMMAND] = funcName
-            #
-            #         if DEFAULT in childopt.attrib:
-            #             optvar.set(kwargs['onvalue'])
-            #         else:
-            #             optvar.set(kwargs['offvalue'])
-            #
-            #         optmenu.add_radiobutton(**kwargs)
-                    # self.processChildElement(optmenu, childopt, optionButtonOptvar=optvar)
 
-
-
-            # optvar = StringVarPlus()
-            # self.addOptionVarRef(optvar, id)
-            # for childopt in child:
-            #     self.processChildElement(optmenu, childopt, optionButtonOptvar=optvar)
 
 
     def menuTag(self, parent, elem):
