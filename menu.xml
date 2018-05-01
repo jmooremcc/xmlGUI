@@ -1,5 +1,6 @@
 <menus>
   <menubutton name="Settings" bg="sky blue" image="gearIcon.png" relief="RIDGE" activebackground="green">
+    <pack side='TOP' fill='BOTH'/>
     <menuitem name="Edit Default Channel List" shortcutindex="0" onclick="noop"/>
     <menuitem name="Set Channel Group" shortcutindex="4" onclick="noop"/>
     <optionmenu name="Select Kodi Device" id="KodiOptions" typebutton="checkbuttonitem">

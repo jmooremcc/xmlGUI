@@ -14,6 +14,9 @@ from StringVarPlus import StringVarPlus
         name is menu name
         type is ...
         
+    <menubutton name="" bg="" image="" relief="" activebackground="" />
+        <pack side='' fill=''/>
+    
     <menuitem name='' onclick='' shortcutindex="" />
             name is menuitem name
             onclick is name of function to call when the item is clicked and must be in the current scope
@@ -72,6 +75,7 @@ VARIABLE = 'variable'
 TYPEBUTTON = 'typebutton'
 LABEL = 'label'
 DEFAULTINDEX = 'defaultindex'
+PACK='pack'
 
 
 class MenuMakerMixin(object):
@@ -96,6 +100,22 @@ class MenuMakerMixin(object):
                 parent.config(menu=menu)
 
             return menu
+
+    def xlateArgs(self,kwargs):
+        import Tkinter
+
+        for key in kwargs:
+            try:
+                val = getattr(self,kwargs[key])
+                kwargs[key] = val
+            except:
+                try:
+                    val = getattr(Tkinter,kwargs[key])
+                    kwargs[key] = val
+                except:
+                    pass
+
+        return kwargs
 
     def addOptionVarRef(self, optionVar, optionName):
         name = "%sVar%d" % (optionName, self._optionCount)
@@ -396,7 +416,7 @@ class MenuMakerMixin(object):
         kwargs = elem.attrib
         imageFile = kwargs[IMAGE]
         menuName = kwargs[NAME]
-        kwargs[RELIEF] = Tkconstants.__getattribute__(kwargs[RELIEF])
+        kwargs[RELIEF] = getattr(Tkconstants,kwargs[RELIEF])
         kwargs[NAME] = menuName.lower()
         icon = createIcon(imageFile)
         kwargs[IMAGE] = icon
@@ -411,10 +431,18 @@ class MenuMakerMixin(object):
         setattr(self, menuName + "Img", icon)
         mb.config(image=icon)
 
+        packargs = None
+        if PACK in elem[0].tag:
+            packargs = self.xlateArgs(elem[0].attrib.copy())
+            elem = elem[1:]
+
         self.processSiblings(menu, elem)
 
         mb.pack(side=LEFT, fill=BOTH)
-        frame.pack(side=TOP, fill=BOTH)
+        if packargs is None:
+            frame.pack(side=TOP, fill=BOTH)
+        else:
+            frame.pack(packargs)
         #TODO add PACKARGS item to control how the frame is packed
 
 
