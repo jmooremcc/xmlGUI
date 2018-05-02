@@ -51,6 +51,7 @@ from StringVarPlus import StringVarPlus
 MENUS = 'menus'
 MENU = 'menu'
 MENUBUTTON = 'menubutton'
+INCLUDE = 'include'
 # SubMenu Tags
 MENUITEM = 'menuitem'
 OPTIONMENU = 'optionmenu'
@@ -76,6 +77,7 @@ TYPEBUTTON = 'typebutton'
 LABEL = 'label'
 DEFAULTINDEX = 'defaultindex'
 PACK='pack'
+FILENAME = 'filename'
 
 
 class MenuMakerMixin(object):
@@ -85,9 +87,14 @@ class MenuMakerMixin(object):
         self._optionCount = 0
         self.topmenu = None
 
-    def generateMenu(self, xmlfile, parent=None):
+    def parseXMLFile(self, xmlfile):
         tree = ET.parse(xmlfile)
-        self.root = tree.getroot()
+        root = tree.getroot()
+        return root
+
+    def generateMenu(self, xmlfile, parent=None):
+        self.root = self.parseXMLFile(xmlfile)
+
         if self.root.tag != MENUS:
             raise Exception("%s does not contain the required menus tag" % xmlfile)
 
@@ -351,6 +358,9 @@ class MenuMakerMixin(object):
                 newMenu.add_cascade(label=child.attrib[NAME], menu=optmenu)
                 self.processOptionMenu(parent, optmenu, child, cbflag)
 
+            elif child.tag == INCLUDE:
+                self.includeTag(newMenu, child)
+
             elif child.tag == MENUITEM:
                 self.processChildElement(newMenu, child)
 
@@ -445,6 +455,11 @@ class MenuMakerMixin(object):
             frame.pack(packargs)
         #TODO add PACKARGS item to control how the frame is packed
 
+    def includeTag(self, parent, elem):
+        if FILENAME in elem.attrib:
+            filename = elem.attrib[FILENAME]
+            elem = self.parseXMLFile(filename)
+            self.parseMenuTree(parent, elem)
 
     def parseMenuTree(self, parent, elem):
         """
@@ -457,12 +472,14 @@ class MenuMakerMixin(object):
             MENUS: self.menusTag,
             MENU: self.menuTag,
             MENUBUTTON: self.menubuttonTag,
-            OPTIONMENU: self.optionmenuTag
+            OPTIONMENU: self.optionmenuTag,
+            INCLUDE:self.includeTag
         }
         try:
             dispatcher[elem.tag](parent, elem)
         except Exception as e:
-            raise Exception("tag: %s is not a menu tag" % elem.tag)
+            print("%s is not a menu tag" % elem.tag)
+            raise Exception("%s is not a menu tag" % elem.tag)
 
 
     def myDataprovider(self):
