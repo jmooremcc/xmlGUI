@@ -453,7 +453,7 @@ class MenuMakerMixin(object):
             frame.pack(side=TOP, fill=BOTH)
         else:
             frame.pack(packargs)
-        #TODO add PACKARGS item to control how the frame is packed
+
 
     def includeTag(self, parent, elem):
         if FILENAME in elem.attrib:
