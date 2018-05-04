@@ -13,6 +13,7 @@ GROUP = 'group'
 CHECKBUTTON = 'checkbutton'
 RADIOBUTTON = 'radiobutton'
 BUTTON = 'button'
+GRID = 'grid'
 
 #Special Attributes
 ONCLICK = 'onclick'
@@ -56,7 +57,15 @@ class GUI_MakerMixin(object):
                     val = getattr(Tkinter,kwargs[key])
                     kwargs[key] = val
                 except:
-                    pass
+                    if '+' in kwargs[key]:
+                        tmp = kwargs[key].split('+')
+                        val=""
+                        for v in tmp:
+                            val += getattr(Tkinter, v)
+
+                        kwargs[key] = val
+                    else:
+                        pass
 
         return kwargs
 
@@ -117,27 +126,46 @@ class GUI_MakerMixin(object):
             elem.remove(packelem)
             return packargs
 
+    def extractGridargs(self, elem):
+        gridelem = elem.find(GRID)
+        if gridelem is not None:
+            gridargs = self.xlateArgs(gridelem.attrib.copy())
+            elem.remove(gridelem)
+            return gridargs
+
 
     def processForm(self, master, element):
         frameoptions = self.xlateArgs(element.attrib.copy())
         frame = Tkinter.Frame(master, **frameoptions)
         framepackargs = self.extractPackargs(element)
 
+        framegridargs = None
+        if framepackargs is None:
+            framegridargs = self.extractGridargs(element)
+
         packargs = None
 
         for subelement in element:
             packargs = self.extractPackargs(subelement)
+            gridargs = None
+            if packargs is None:
+                gridargs = self.extractGridargs(subelement)
+
             widget = self.parseXmlElement(frame, subelement)
 
-            if packargs is None:
+            if packargs is None and gridargs is None:
                 widget.pack()
-            else:
+            elif packargs is not None:
                 widget.pack(**packargs)
+            elif gridargs is not None:
+                widget.grid(**gridargs)
 
-        if framepackargs is None:
+        if framepackargs is None and framegridargs is None:
             frame.pack()
-        else:
+        elif framepackargs is not None:
             frame.pack(**framepackargs)
+        elif framegridargs is not None:
+            frame.grid(**framegridargs)
 
         return frame
 
@@ -171,22 +199,33 @@ class GUI_MakerMixin(object):
             varfunc = None
 
         framepackargs = self.extractPackargs(element)
+
+        framegridargs = None
+        if framepackargs is None:
+            framegridargs = self.extractGridargs(element)
+
         frame = Tkinter.Frame(master, **element.attrib)
 
         cblist = element.findall(CHECKBUTTON)
         if len(cblist) > 0:
             for cb in cblist:
                 packargs = self.extractPackargs(cb)
+                gridargs = None
+                if packargs is None:
+                    gridargs = self.extractGridargs(cb)
+
                 widget = self.parseXmlElement(frame, cb)
                 element.remove(cb)
 
                 # index = element._children.index(cb)
                 # del(element._children[index])
 
-                if packargs is None:
+                if packargs is None and gridargs is None:
                     widget.pack()
-                else:
+                elif packargs is not None:
                     widget.pack(**packargs)
+                elif gridargs is not None:
+                    widget.grid(**gridargs)
 
         else:
             rblist = element.findall(RADIOBUTTON)
@@ -195,20 +234,28 @@ class GUI_MakerMixin(object):
 
                 for rb in rblist:
                     packargs = self.extractPackargs(rb)
+                    gridargs = None
+                    if packargs is None:
+                        gridargs = self.extractGridargs(rb)
+
                     widget = self.parseXmlElement(frame, rb)
                     element.remove(rb)
                     # index = element._children.index(rb)
                     # del (element._children[index])
 
-                    if packargs is None:
+                    if packargs is None and gridargs is None:
                         widget.pack()
-                    else:
+                    elif packargs is not None:
                         widget.pack(**packargs)
+                    elif gridargs is not None:
+                        widget.grid(**gridargs)
 
-        if framepackargs is None:
+        if framepackargs is None and framegridargs is None:
             frame.pack()
-        else:
+        elif framepackargs is not None:
             frame.pack(**framepackargs)
+        elif framegridargs is not None:
+            frame.grid(**framegridargs)
 
         return frame
 
@@ -282,6 +329,7 @@ class GUI_MakerMixin(object):
 
     def parseXmlElement(self, master, element):
         framepackargs = None
+        framegridargs = None
         if element.tag == FORM:
             return self.processForm(master, element)
 
@@ -299,6 +347,9 @@ class GUI_MakerMixin(object):
                 else:
                     options = self.xlateArgs(options)
 
+            packargs = None
+            gridargs = None
+
             if len(element):
                 if element.tag == 'entry':
                     options = self.processEntryOptions(element, options)
@@ -310,10 +361,21 @@ class GUI_MakerMixin(object):
                     options = self.processRadiobuttonOptions(element, options)
 
                 for subelement in element:
-                    options[subelement.tag] = subelement.text
+                    if subelement.tag == PACK:
+                        packargs = self.extractPackargs(subelement)
+                    elif subelement.tag == GRID:
+                        gridargs = self.extractGridargs(subelement)
+                    else:
+                        options[subelement.tag] = subelement.text
 
             widget_factory = getattr(Tkinter, element.tag.capitalize())
-            return widget_factory(master, **options)
+
+            if packargs is None and gridargs is None:
+                return widget_factory(master, **options)
+            elif packargs is not None:
+                return widget_factory(master, **options).grid(**packargs)
+            elif gridargs is not None:
+                return widget_factory(master, **options).grid(**gridargs)
 
     def noop(self, *arg):
         """
@@ -337,7 +399,7 @@ if __name__ == '__main__':
     root.geometry("230x200")
 
     m1 = GUI_MakerMixin(root)
-    fr = m1.makeGUI(root, "gui1.xml")
+    fr = m1.makeGUI(root, "gui2.xml")
     fr.pack()
 
     root.mainloop()
