@@ -3,6 +3,7 @@
 import Tkinter
 import xml.etree.ElementTree as ET
 from functools import partial
+from StringVarPlus import StringVarPlus
 
 #Special Tags
 PACK = 'pack'
@@ -43,9 +44,15 @@ class GUI_MakerMixin(object):
         :return: A reference to the actual function
         """
         if arg is None:
-            return getattr(self, fnName)
+            if isinstance(fnName, str):
+                return getattr(self, fnName)
+            else:
+                return fnName
         else:
-            return partial(getattr(self, fnName), arg)
+            if isinstance(fnName, str):
+                return partial(getattr(self, fnName), arg)
+            else:
+                return partial(fnName, arg)
 
     def xlateArgs(self,kwargs):
         for key in kwargs:
@@ -76,7 +83,7 @@ class GUI_MakerMixin(object):
 
     def makeGUI(self, master, xmlfile):
         element = self.parseXMLFile(xmlfile)
-        frame = self.parseXmlElement(master, element)
+        frame = self.processXmlElement(master, element)
         return frame
 
     def extractAttrib(self, elem, attrib):
@@ -122,14 +129,14 @@ class GUI_MakerMixin(object):
     def extractPackargs(self, elem):
         packelem = elem.find(PACK)
         if packelem is not None:
-            packargs = self.xlateArgs(packelem.attrib.copy())
+            packargs = self.xlateArgs(packelem.attrib)
             elem.remove(packelem)
             return packargs
 
     def extractGridargs(self, elem):
         gridelem = elem.find(GRID)
         if gridelem is not None:
-            gridargs = self.xlateArgs(gridelem.attrib.copy())
+            gridargs = self.xlateArgs(gridelem.attrib)
             elem.remove(gridelem)
             return gridargs
 
@@ -139,7 +146,7 @@ class GUI_MakerMixin(object):
         if packargs is None:
             gridargs = self.extractGridargs(subelement)
 
-        widget = self.parseXmlElement(frame, subelement)
+        widget = self.processXmlElement(frame, subelement)
 
         if packargs is None and gridargs is None:
             widget.pack()
@@ -150,7 +157,7 @@ class GUI_MakerMixin(object):
 
 
     def processForm(self, master, element):
-        frameoptions = self.xlateArgs(element.attrib.copy())
+        frameoptions = self.xlateArgs(element.attrib)
         frame = Tkinter.Frame(master, **frameoptions)
         framepackargs = self.extractPackargs(element)
 
@@ -164,7 +171,7 @@ class GUI_MakerMixin(object):
             if subelement.tag != GROUP:
                 self.processSubelement(frame, subelement)
             else:
-                widget = self.parseXmlElement(frame, subelement)
+                widget = self.processXmlElement(frame, subelement)
 
         if framepackargs is None and framegridargs is None:
             frame.pack()
@@ -210,7 +217,7 @@ class GUI_MakerMixin(object):
         if framepackargs is None:
             framegridargs = self.extractGridargs(element)
 
-        options = self.xlateArgs(element.attrib.copy())
+        options = self.xlateArgs(element.attrib)
         frame = Tkinter.Frame(master, **options)
 
         cblist = element.findall(CHECKBUTTON)
@@ -233,7 +240,7 @@ class GUI_MakerMixin(object):
                     if subelement.tag != GROUP:
                         self.processSubelement(frame, subelement)
                     else:
-                        widget = self.parseXmlElement(frame, subelement)
+                        widget = self.processXmlElement(frame, subelement)
 
         if framepackargs is None and framegridargs is None:
             frame.pack()
@@ -312,9 +319,7 @@ class GUI_MakerMixin(object):
         return options
 
 
-    def parseXmlElement(self, master, element):
-        framepackargs = None
-        framegridargs = None
+    def processXmlElement(self, master, element):
         if element.tag == FORM:
             return self.processForm(master, element)
 
@@ -322,21 +327,19 @@ class GUI_MakerMixin(object):
             return self.processGroup(master, element)
 
         else:
-            options = element.attrib.copy()
-            if len(options) > 0 and element.tag == BUTTON:
-                if TEXT in options:
-                    btnName = options[TEXT]
-
-                    if COMMAND in options:
-                        options[COMMAND] = self.makeCommand(options[COMMAND], btnName)
-                else:
-                    options = self.xlateArgs(options)
-
+            options = self.xlateArgs(element.attrib)
             packargs = None
             gridargs = None
 
-            if len(element):
-                if element.tag == 'entry':
+            if len(element) or element.tag == BUTTON:
+                if element.tag == BUTTON:
+                    if TEXT in options:
+                        btnName = options[TEXT]
+
+                        if COMMAND in options:
+                            options[COMMAND] = self.makeCommand(options[COMMAND], btnName)
+
+                elif element.tag == 'entry':
                     options = self.processEntryOptions(element, options)
 
                 elif element.tag == 'checkbutton':
@@ -358,9 +361,9 @@ class GUI_MakerMixin(object):
             if packargs is None and gridargs is None:
                 return widget_factory(master, **options)
             elif packargs is not None:
-                return widget_factory(master, **options).grid(**packargs)
+                widget_factory(master, **options).pack(**packargs)
             elif gridargs is not None:
-                return widget_factory(master, **options).grid(**gridargs)
+                widget_factory(master, **options).grid(**gridargs)
 
     def noop(self, *arg):
         """
@@ -371,8 +374,11 @@ class GUI_MakerMixin(object):
         if len(arg) == 1:
             if type(arg) == tuple:
                 myarg = arg[0]
-                # if isinstance(myarg, StringVarPlus):
-                #     myarg = myarg.get()
+                try:
+                    if isinstance(myarg, StringVarPlus):
+                        myarg = myarg.get()
+                except:
+                    pass
             else:
                 myarg = arg
         else:
