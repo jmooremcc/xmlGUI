@@ -13,6 +13,7 @@ FORM = 'form'
 GROUP = 'group'
 CHECKBUTTON = 'checkbutton'
 RADIOBUTTON = 'radiobutton'
+SCALE = 'scale'
 BUTTON = 'button'
 GRID = 'grid'
 INCLUDE = 'include'
@@ -248,11 +249,16 @@ class GUI_MakerMixin(object):
                     self.processSubelement(frame, subelement)
 
             else:
-                for subelement in element:
-                    if subelement.tag != GROUP:
+                sslist = element.findall(SCALE)
+                if len(sslist) > 0:
+                    setattr(self, varname, varfunc)
+
+                    for ss in sslist:
+                        self.processSubelement(frame, ss)
+                        element.remove(ss)
+
+                    for subelement in element:
                         self.processSubelement(frame, subelement)
-                    else:
-                        widget = self.processXmlElement(frame, subelement)
 
         if framepackargs is None and framegridargs is None:
             frame.pack()
@@ -341,6 +347,39 @@ class GUI_MakerMixin(object):
 
         return options
 
+    def processScaleOptions(self, element, options):
+        optvar = element.find(VARIABLE)
+        if optvar is not None:
+            # varname = optvar.attrib[NAME]
+            if NAME in optvar.attrib:
+                varname = optvar.attrib[NAME]
+            elif TEXT in options:
+                varname = "ss" + options[TEXT]
+            else:
+                raise Exception("Scale Variable Tag missing name attribute")
+            # varfunc = getattr(self, varname)
+            varfunc = self.extractFunction(optvar, NAME, run=False)
+
+            default = False
+            if DEFAULT in optvar.attrib:
+                default = optvar.attrib[DEFAULT]
+
+            if default:
+                varfunc.set(1)
+            else:
+                varfunc.set(0)
+
+            if ONCLICK in optvar.attrib:
+                funcname = optvar.attrib[ONCLICK]
+                options[COMMAND] = self.makeCommand(funcname, varname)
+
+            options[VARIABLE] = varfunc
+            element.remove(optvar)
+            # index = element._children.index(optvar)
+            # del (element._children[index])
+
+        return options
+
     def processIncludeTag(self, parent, elem):
         if FILENAME in elem.attrib:
             filename = elem.attrib[FILENAME]
@@ -380,6 +419,9 @@ class GUI_MakerMixin(object):
                 elif element.tag == 'radiobutton':
                     options = self.processRadiobuttonOptions(element, options)
 
+                elif element.tag == 'scale':
+                    options = self.processScaleOptions(element, options)
+
                 for subelement in element:
                     if subelement.tag == PACK:
                         packargs = self.extractPackargs(subelement)
@@ -390,14 +432,14 @@ class GUI_MakerMixin(object):
                         if COMMAND in options and TEXT in options:
                             options[COMMAND] = self.makeCommand(options[COMMAND], options[TEXT])
 
-            widget_factory = getattr(Tkinter, element.tag.capitalize())
+                widget_factory = getattr(Tkinter, element.tag.capitalize())
 
-            if packargs is None and gridargs is None:
-                return widget_factory(master, **options)
-            elif packargs is not None:
-                widget_factory(master, **options).pack(**packargs)
-            elif gridargs is not None:
-                widget_factory(master, **options).grid(**gridargs)
+                if packargs is None and gridargs is None:
+                    return widget_factory(master, **options)
+                elif packargs is not None:
+                    widget_factory(master, **options).pack(**packargs)
+                elif gridargs is not None:
+                    widget_factory(master, **options).grid(**gridargs)
 
     def noop(self, *arg):
         """
