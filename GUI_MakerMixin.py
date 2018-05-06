@@ -15,6 +15,7 @@ CHECKBUTTON = 'checkbutton'
 RADIOBUTTON = 'radiobutton'
 BUTTON = 'button'
 GRID = 'grid'
+INCLUDE = 'include'
 
 #Special Attributes
 ONCLICK = 'onclick'
@@ -26,6 +27,7 @@ DEFAULT = 'default'
 VARNAME = 'varname'
 VALUE = 'value'
 TEXT = 'text'
+FILENAME = 'filename'
 
 
 
@@ -65,12 +67,16 @@ class GUI_MakerMixin(object):
                     kwargs[key] = val
                 except:
                     if '+' in kwargs[key]:
-                        tmp = kwargs[key].split('+')
-                        val=""
-                        for v in tmp:
-                            val += getattr(Tkinter, v)
+                        try:
+                            tmp = kwargs[key].split('+')
+                            val=""
+                            for v in tmp:
+                                val += getattr(Tkinter, v)
 
-                        kwargs[key] = val
+                            kwargs[key] = val
+                        except:
+                            pass
+
                     else:
                         pass
 
@@ -148,11 +154,11 @@ class GUI_MakerMixin(object):
 
         widget = self.processXmlElement(frame, subelement)
 
-        if packargs is None and gridargs is None:
+        if packargs is None and gridargs is None and widget is not None:
             widget.pack()
-        elif packargs is not None:
+        elif packargs is not None and widget is not None:
             widget.pack(**packargs)
-        elif gridargs is not None:
+        elif gridargs is not None and widget is not None:
             widget.grid(**gridargs)
 
 
@@ -224,7 +230,10 @@ class GUI_MakerMixin(object):
         if len(cblist) > 0:
             for cb in cblist:
                 self.processSubelement(frame, cb)
+                element.remove(cb)
 
+            for subelement in element:
+                self.processSubelement(frame, subelement)
 
         else:
             rblist = element.findall(RADIOBUTTON)
@@ -233,7 +242,10 @@ class GUI_MakerMixin(object):
 
                 for rb in rblist:
                     self.processSubelement(frame, rb)
+                    element.remove(rb)
 
+                for subelement in element:
+                    self.processSubelement(frame, subelement)
 
             else:
                 for subelement in element:
@@ -278,7 +290,12 @@ class GUI_MakerMixin(object):
             else:
                 varfunc.set(0)
 
-            varname = optvar.attrib[NAME]
+            if NAME in optvar.attrib:
+                varname = optvar.attrib[NAME]
+            elif TEXT in options:
+                varname = "cb" + options[TEXT]
+            else:
+                raise Exception("Checkbutton Variable Tag missing name attribute")
 
             if ONCLICK in optvar.attrib:
                 funcname = optvar.attrib[ONCLICK]
@@ -294,7 +311,13 @@ class GUI_MakerMixin(object):
     def processRadiobuttonOptions(self, element, options):
         optvar = element.find(VARIABLE)
         if optvar is not None:
-            varname = optvar.attrib[NAME]
+            # varname = optvar.attrib[NAME]
+            if NAME in optvar.attrib:
+                varname = optvar.attrib[NAME]
+            elif TEXT in options:
+                varname = "rb" + options[TEXT]
+            else:
+                raise Exception("Radiobutton Variable Tag missing name attribute")
             # varfunc = getattr(self, varname)
             varfunc = self.extractFunction(optvar, NAME, run=False)
 
@@ -318,6 +341,12 @@ class GUI_MakerMixin(object):
 
         return options
 
+    def processIncludeTag(self, parent, elem):
+        if FILENAME in elem.attrib:
+            filename = elem.attrib[FILENAME]
+            elem = self.parseXMLFile(filename)
+            return self.processXmlElement(parent, elem)
+
 
     def processXmlElement(self, master, element):
         if element.tag == FORM:
@@ -325,6 +354,9 @@ class GUI_MakerMixin(object):
 
         elif element.tag == GROUP:
             return self.processGroup(master, element)
+
+        elif element.tag == INCLUDE:
+            return self.processIncludeTag(master, element)
 
         else:
             options = self.xlateArgs(element.attrib)
@@ -355,6 +387,8 @@ class GUI_MakerMixin(object):
                         gridargs = self.extractGridargs(subelement)
                     else:
                         options[subelement.tag] = subelement.text
+                        if COMMAND in options and TEXT in options:
+                            options[COMMAND] = self.makeCommand(options[COMMAND], options[TEXT])
 
             widget_factory = getattr(Tkinter, element.tag.capitalize())
 
@@ -373,16 +407,24 @@ class GUI_MakerMixin(object):
         """
         if len(arg) == 1:
             if type(arg) == tuple:
-                myarg = arg[0]
                 try:
-                    if isinstance(myarg, StringVarPlus):
-                        myarg = myarg.get()
+                    myarg = getattr(self, arg[0])
+                except:
+                    myarg = arg[0]
+
+                try:
+                    if isinstance(myarg, StringVarPlus) or isinstance(myarg, Tkinter.IntVar):
+                        # myarg = myarg.get()
+                        print("noop called: %s:%s" % (arg[0],myarg.get()))
+                        return
                 except:
                     pass
             else:
                 myarg = arg
         else:
             myarg = arg[0]
+            print("noop called: %s:%s:%s" % (myarg, arg[1], getattr(self,myarg).get()))
+            return
         print("noop called: %s" % myarg)
 
 if __name__ == '__main__':
@@ -390,7 +432,7 @@ if __name__ == '__main__':
     root.geometry("230x200")
 
     m1 = GUI_MakerMixin(root)
-    fr = m1.makeGUI(root, "gui2.xml")
+    fr = m1.makeGUI(root, "gui7.xml")
     fr.pack()
 
     root.mainloop()
