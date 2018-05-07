@@ -7,16 +7,20 @@ from StringVarPlus import StringVarPlus
 
 #Special Tags
 PACK = 'pack'
-VARIABLE = 'variable'
-TEXTVARIABLE = 'textvariable'
+VARIABLE = 'variable' # name="" typevar="" default="" onclick=""
 FORM = 'form'
 GROUP = 'group'
+REPGROUP = 'repgroup' # tags="" data="" singleframe="false"
+GRID = 'grid'
+INCLUDE = 'include'
+TEXTVARIABLE = 'textvariable'
+
+#Regular Tags that require special treatment
 CHECKBUTTON = 'checkbutton'
 RADIOBUTTON = 'radiobutton'
 SCALE = 'scale'
 BUTTON = 'button'
-GRID = 'grid'
-INCLUDE = 'include'
+
 
 #Special Attributes
 ONCLICK = 'onclick'
@@ -30,6 +34,32 @@ VALUE = 'value'
 TEXT = 'text'
 FILENAME = 'filename'
 
+#tags="abc:text,def:textvariable"
+def extractRgTags(tags):
+    """
+    extract repgroup tags dict from tags attribute
+    :param tags: str
+    :return: dict
+    """
+    a1=tags.split(',')
+    a2=[tuple(x.split(':')) for x in a1]
+    opsdict = dict(a2)
+    return opsdict
+
+#data="tag:a,b,c,d|tag2:e,f,g,h"
+def extractRgData(data):
+    """
+    extract repgroup data from data attribute
+    :param data: str
+    :return: dict
+    """
+    b1 = data.split('|')
+    b2 = [tuple(x.split(':')) for x in b1]
+    datadict = dict(b2)
+    for key in datadict:
+        datadict[key] = datadict[key].split(',')
+
+    return datadict
 
 
 class GUI_MakerMixin(object):
@@ -469,12 +499,21 @@ class GUI_MakerMixin(object):
             return
         print("noop called: %s" % myarg)
 
+
+    def quit(self, *arg):
+        """
+        Sample onclick handler
+        :param arg:
+        :return:
+        """
+        exit()
+
 if __name__ == '__main__':
     root = Tkinter.Tk()
     root.geometry("230x200")
 
     m1 = GUI_MakerMixin(root)
-    fr = m1.makeGUI(root, "gui7.xml")
+    fr = m1.makeGUI(root, "gui8.xml")
     fr.pack()
 
     root.mainloop()
