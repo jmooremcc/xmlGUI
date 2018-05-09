@@ -4,13 +4,14 @@ import Tkinter
 import xml.etree.ElementTree as ET
 from functools import partial
 from StringVarPlus import StringVarPlus
+import copy
 
 #Special Tags
 PACK = 'pack'
 VARIABLE = 'variable' # name="" typevar="" default="" onclick=""
 FORM = 'form'
 GROUP = 'group'
-REPGROUP = 'repgroup' # tags="" data="" singleframe="false"
+REPGROUP = 'repgroup' # tags="" data="" uniqueframe="false"
 GRID = 'grid'
 INCLUDE = 'include'
 TEXTVARIABLE = 'textvariable'
@@ -20,7 +21,9 @@ CHECKBUTTON = 'checkbutton'
 RADIOBUTTON = 'radiobutton'
 SCALE = 'scale'
 BUTTON = 'button'
+ENTRY = 'entry'
 
+SPECIALTAGS = [CHECKBUTTON,RADIOBUTTON,SCALE,BUTTON,ENTRY,VARIABLE]
 
 #Special Attributes
 ONCLICK = 'onclick'
@@ -33,31 +36,44 @@ VARNAME = 'varname'
 VALUE = 'value'
 TEXT = 'text'
 FILENAME = 'filename'
+TAGS = 'tags'
+DATA = 'data'
+UNIQUEFRAME = 'uniqueframe'
 
 #tags="abc:text,def:textvariable"
-def extractRgTags(tags):
+def extractRgAttribsDict(tags):
     """
     extract repgroup tags dict from tags attribute
     :param tags: str
     :return: dict
     """
     a1=tags.split(',')
+    for n, s in enumerate(a1):
+        a1[n]= s.strip()
+
     a2=[tuple(x.split(':')) for x in a1]
     opsdict = dict(a2)
     return opsdict
 
 #data="tag:a,b,c,d|tag2:e,f,g,h"
-def extractRgData(data):
+def extractRgDataDict(data):
     """
     extract repgroup data from data attribute
     :param data: str
     :return: dict
     """
     b1 = data.split('|')
+    for n, s in enumerate(b1):
+        b1[n]= s.strip()
+
     b2 = [tuple(x.split(':')) for x in b1]
     datadict = dict(b2)
     for key in datadict:
-        datadict[key] = datadict[key].split(',')
+        b3 = datadict[key].split(',')
+        for n, s in enumerate(b3):
+            b3[n] = s.strip()
+
+        datadict[key] = b3
 
     return datadict
 
@@ -290,6 +306,10 @@ class GUI_MakerMixin(object):
                     for subelement in element:
                         self.processSubelement(frame, subelement)
 
+                else:
+                    for subelement in element:
+                        self.processSubelement(frame, subelement)
+
         if framepackargs is None and framegridargs is None:
             frame.pack()
         elif framepackargs is not None:
@@ -300,8 +320,8 @@ class GUI_MakerMixin(object):
         return frame
 
     def processEntryOptions(self, element, options):
-        textvar = element.find(TEXTVARIABLE)
-        if textvar is not None:
+        textvar = element.find(VARIABLE)
+        if textvar is not None and NAME in textvar.attrib:
             varfunc = getattr(Tkinter, textvar.attrib[TYPEVAR])()
             varname = textvar.attrib[NAME]
             setattr(self, varname, varfunc)
@@ -417,6 +437,145 @@ class GUI_MakerMixin(object):
             return self.processXmlElement(parent, elem)
 
 
+    def processButtonOptions(self, element, options):
+        if TEXT in options:
+            btnName = options[TEXT]
+
+            if COMMAND in options:
+                options[COMMAND] = self.makeCommand(options[COMMAND], btnName)
+
+            elif ONCLICK in options:
+                options[COMMAND] = self.makeCommand(options[ONCLICK], btnName)
+                del (options[ONCLICK])
+
+        return options
+
+
+    def processVariableTagOptions(self, element, options):
+        if NAME in options:
+            varname = options[NAME]
+            varfunc = options[TYPEVAR]()
+            setattr(self, varname, varfunc)
+            if DEFAULT in options:
+                default = options[DEFAULT]
+                if default == 'true':
+                    varfunc.set(1)
+                else:
+                    varfunc.set(0)
+            # del(element)
+
+        return options
+
+
+
+
+    def processRepGroupTag(self, master, element):
+        try:
+            grpname = element.attrib[NAME]
+            del (element.attrib[NAME])
+        except:
+            grpname = None
+
+        try:
+            grplistname = element.attrib[GROUPLIST]
+            del (element.attrib[GROUPLIST])
+        except:
+            grplistname = None
+
+        try:
+            onclickfunc = self.extractAttrib(element, ONCLICK)
+        except:
+            onclickfunc = None
+
+        try:
+            varname = self.extractAttrib(element, VARNAME)
+        except:
+            varname = None
+
+        try:
+            varfunc = self.extractFunction(element, TYPEVAR)
+        except:
+            varfunc = None
+
+        framepackargs = self.extractPackargs(element)
+
+        framegridargs = None
+        if framepackargs is None:
+            framegridargs = self.extractGridargs(element)
+
+        if TAGS in element.attrib:
+            tags = element.get(TAGS)
+            del(element.attrib[TAGS])
+        else:
+            tags = None
+
+        if DATA in element.attrib:
+            data = element.get(DATA)
+            del(element.attrib[DATA])
+        else:
+            data = None
+
+        if UNIQUEFRAME in element.attrib:
+            uniqueframe = element.get(UNIQUEFRAME).lower() == "true"
+            del(element.attrib[UNIQUEFRAME])
+        else:
+            uniqueframe = False
+
+        if tags is not None and data is not None:
+            rgAttribs = extractRgAttribsDict(tags)
+            data = extractRgDataDict(data)
+        else:
+            raise Exception("repgroup tag missing tags and/or data atrributes")
+
+
+        options = self.xlateArgs(element.attrib)
+        # options = element.attrib
+
+        frame = None
+        if uniqueframe:
+            frame = Tkinter.Frame(master, **options)
+
+        numDataItems = len(data.values()[0])
+        for n in range(numDataItems):
+            if not uniqueframe:
+                frame = Tkinter.Frame(master, **options)
+
+            for elem in element:
+                subelem = copy.deepcopy(elem)
+                try:
+                    attribName = rgAttribs[subelem.tag]
+                    subelem.attrib[attribName] = data[subelem.tag].pop(0)
+                    if subelem.tag == ENTRY:
+                        txtvar = subelem.find(VARIABLE)
+                        if txtvar is not None:
+                            txtvar.attrib[NAME] =  subelem.attrib[attribName]
+
+
+                    widget = self.processSubelement(frame, subelem)
+
+                except Exception as e:
+                    print e.message
+
+            if not uniqueframe:
+                if framepackargs is None and framegridargs is None:
+                    frame.pack()
+                elif framepackargs is not None:
+                    frame.pack(**framepackargs)
+                elif framegridargs is not None:
+                    frame.grid(**framegridargs)
+
+
+        if uniqueframe:
+            if framepackargs is None and framegridargs is None:
+                frame.pack()
+            elif framepackargs is not None:
+                frame.pack(**framepackargs)
+            elif framegridargs is not None:
+                frame.grid(**framegridargs)
+
+            return frame
+
+
     def processXmlElement(self, master, element):
         if element.tag == FORM:
             return self.processForm(master, element)
@@ -427,30 +586,33 @@ class GUI_MakerMixin(object):
         elif element.tag == INCLUDE:
             return self.processIncludeTag(master, element)
 
+        elif element.tag == REPGROUP:
+            return self.processRepGroupTag(master, element)
+
         else:
             options = self.xlateArgs(element.attrib)
             packargs = None
             gridargs = None
 
-            if len(element) or element.tag == BUTTON:
+            if len(element) or element.tag in SPECIALTAGS:
                 if element.tag == BUTTON:
-                    if TEXT in options:
-                        btnName = options[TEXT]
+                    options = self.processButtonOptions(element, options)
 
-                        if COMMAND in options:
-                            options[COMMAND] = self.makeCommand(options[COMMAND], btnName)
-
-                elif element.tag == 'entry':
+                elif element.tag == ENTRY:
                     options = self.processEntryOptions(element, options)
 
-                elif element.tag == 'checkbutton':
+                elif element.tag == CHECKBUTTON:
                     options = self.processCheckbuttonOptions(element, options)
 
-                elif element.tag == 'radiobutton':
+                elif element.tag == RADIOBUTTON:
                     options = self.processRadiobuttonOptions(element, options)
 
-                elif element.tag == 'scale':
+                elif element.tag == SCALE:
                     options = self.processScaleOptions(element, options)
+
+                elif element.tag == VARIABLE:
+                    options = self.processVariableTagOptions(element, options)
+                    return
 
                 for subelement in element:
                     if subelement.tag == PACK:
@@ -462,14 +624,14 @@ class GUI_MakerMixin(object):
                         if COMMAND in options and TEXT in options:
                             options[COMMAND] = self.makeCommand(options[COMMAND], options[TEXT])
 
-                widget_factory = getattr(Tkinter, element.tag.capitalize())
+            widget_factory = getattr(Tkinter, element.tag.capitalize())
 
-                if packargs is None and gridargs is None:
-                    return widget_factory(master, **options)
-                elif packargs is not None:
-                    widget_factory(master, **options).pack(**packargs)
-                elif gridargs is not None:
-                    widget_factory(master, **options).grid(**gridargs)
+            if packargs is None and gridargs is None:
+                return widget_factory(master, **options)
+            elif packargs is not None:
+                widget_factory(master, **options).pack(**packargs)
+            elif gridargs is not None:
+                widget_factory(master, **options).grid(**gridargs)
 
     def noop(self, *arg):
         """
@@ -508,12 +670,19 @@ class GUI_MakerMixin(object):
         """
         exit()
 
+
+    def fetch(self, arg):
+        data={'Name':self.n1.get(),'Job':self.j1.get(), 'Pay':self.p1.get()}
+        for label in data:
+            value =data[label]
+            print("%s:%s" % (label, value))
+
 if __name__ == '__main__':
     root = Tkinter.Tk()
     root.geometry("230x200")
 
     m1 = GUI_MakerMixin(root)
-    fr = m1.makeGUI(root, "gui8.xml")
+    fr = m1.makeGUI(root, "gui10.xml")
     fr.pack()
 
     root.mainloop()
