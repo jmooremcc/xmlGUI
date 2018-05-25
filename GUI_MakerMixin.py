@@ -1,10 +1,13 @@
 #Gui_MakerMixin
-
+from __future__ import print_function
+import sys
 import Tkinter
 import xml.etree.ElementTree as ET
 from functools import partial
 from StringVarPlus import StringVarPlus
+from TkinterInterface import TkinterInterface
 import copy
+
 
 #Special Tags
 PACK = 'pack'
@@ -39,6 +42,20 @@ FILENAME = 'filename'
 TAGS = 'tags'
 DATA = 'data'
 UNIQUEFRAME = 'uniqueframe'
+
+stack = []
+stacklevel = 0
+
+def pushFrame():
+    global stacklevel
+    stack.append(stacklevel)
+    stacklevel += 1
+
+def popFrame():
+    global stacklevel
+    val = stack.pop()
+    stacklevel -= 1
+    return val
 
 #tags="abc:text,def:textvariable"
 def extractRgAttribsDict(tags):
@@ -78,12 +95,20 @@ def extractRgDataDict(data):
     return datadict
 
 
+
 class GUI_MakerMixin(object):
-    def __init__(self, topLevelWindow=None):
+    def __init__(self, topLevelWindow=None, outputfilename=None):
         if topLevelWindow is None:
             self.topLevelWindow = Tkinter.Tk()
         else:
             self.topLevelWindow = topLevelWindow
+
+        self.outputfp = sys.stdout
+        if outputfilename is not None:
+            self.outputfp=sys.stdout
+           # self.outputfp = open(outputfilename,'w')
+
+        self.emit("Hello World")
 
     def makeCommand(self, fnName, arg=None):
         """
@@ -99,9 +124,13 @@ class GUI_MakerMixin(object):
                 return fnName
         else:
             if isinstance(fnName, str):
-                return partial(getattr(self, fnName), arg)
+                f = partial(getattr(self, fnName), arg)
+                setattr(f,'__name__',fnName)
+                return f
             else:
-                return partial(fnName, arg)
+                f = partial(fnName, arg)
+                setattr(f, '__name__', fnName)
+                return f
 
     def xlateArgs(self,kwargs):
         for key in kwargs:
@@ -137,6 +166,14 @@ class GUI_MakerMixin(object):
     def makeGUI(self, master, xmlfile):
         element = self.parseXMLFile(xmlfile)
         frame = self.processXmlElement(master, element)
+        if element.tag == FORM:
+            element.tag = 'Frame'
+
+        #self.emitPackargs(element, '')
+
+        if self.outputfp is not None:
+            self.outputfp.close()
+
         return frame
 
     def extractAttrib(self, elem, attrib):
@@ -193,6 +230,75 @@ class GUI_MakerMixin(object):
             elem.remove(gridelem)
             return gridargs
 
+    def emitPackargs(self,  widgetelem, packargs):
+        pad = (stacklevel * '\t')
+        print(pad + "{}.pack({})".format(widgetelem.tag, packargs))
+
+    def emitGridargs(self, widgetelem, gridargs):
+        pad = (stacklevel * '\t')
+        print(pad + "{}.grid({})".format(widgetelem.tag, gridargs))
+
+    def emitFrame(self,widgetname, master, *args, **kwargs):
+        try:
+            mastername = master.widgetName
+        except:
+            mastername = master.__class__.__name__
+
+        pad = (stacklevel * '\t')
+        #outputstr="{}({},{},{})".format(widgetname,mastername, args, kwargs)
+        outputstr = "{}({}".format(widgetname, mastername)
+        if len(args) > 0:
+            outputstr += ", {}".format(args)
+
+        if len(kwargs) > 0:
+            outputstr += ", {}".format(str(kwargs)[1:-1].replace(': ','='))
+
+        outputstr += ")"
+
+        print(pad + outputstr,file=self.outputfp)
+
+    def adjustWidgetArgs(self, args):
+        args = args[0]
+
+        if COMMAND in args:
+            args[COMMAND] = args[COMMAND].func.__name__
+
+        if VARIABLE in args:
+            args[VARIABLE] = str(args[VARIABLE])
+
+        if TEXTVARIABLE in args:
+            args[TEXTVARIABLE] = str(args[TEXTVARIABLE])
+
+        return args
+
+    def emitWidget(self, widgetname, master, *args, **kwargs):
+        try:
+            mastername = master.widgetName
+        except:
+            mastername = master.__class__.__name__
+
+        args = self.adjustWidgetArgs(args)
+        if args is not None:
+            outputstr = "{}({},{})".format(widgetname, mastername, args)
+        else:
+            outputstr="{}({})".format(widgetname,mastername)
+
+        pad = (stacklevel * '\t')
+        print(pad + outputstr,file=self.outputfp,**kwargs)
+
+    def emit(self, *args, **kwargs):
+        pad = (stacklevel * '\t')
+        print(pad, *args, file=self.outputfp, **kwargs)
+
+    def createFrame(self, master, *args, **kwargs):
+        #str = (stacklevel * '\t') + "Frame"
+        self.emitFrame("Frame",master, *args, **kwargs)
+        pushFrame()
+        return Tkinter.Frame(master, *args, **kwargs)
+
+    def createAttr(self, varname, varfunc):
+        return setattr(self, varname, varfunc)
+
     def processSubelement(self, frame, subelement):
         packargs = self.extractPackargs(subelement)
         gridargs = None
@@ -201,17 +307,24 @@ class GUI_MakerMixin(object):
 
         widget = self.processXmlElement(frame, subelement)
 
+        if subelement.tag == 'form':
+            subelement.tag = 'frame'
+
         if packargs is None and gridargs is None and widget is not None:
+            self.emitPackargs(subelement, '')
             widget.pack()
         elif packargs is not None and widget is not None:
+            self.emitPackargs(subelement, packargs)
             widget.pack(**packargs)
         elif gridargs is not None and widget is not None:
+            self.emitGridargs(subelement, gridargs)
             widget.grid(**gridargs)
+
 
 
     def processForm(self, master, element):
         frameoptions = self.xlateArgs(element.attrib)
-        frame = Tkinter.Frame(master, **frameoptions)
+        frame = self.createFrame(master, **frameoptions)
         framepackargs = self.extractPackargs(element)
 
         framegridargs = None
@@ -221,17 +334,24 @@ class GUI_MakerMixin(object):
         packargs = None
 
         for subelement in element:
-            if subelement.tag != GROUP:
+            if subelement.tag != GROUP and subelement.tag != FORM:
                 self.processSubelement(frame, subelement)
             else:
                 widget = self.processXmlElement(frame, subelement)
 
+        element.tag = 'Frame'
+        popFrame()
         if framepackargs is None and framegridargs is None:
+            #self.emit("frame.pack()")
+            self.emitPackargs(element, '')
             frame.pack()
         elif framepackargs is not None:
+            self.emitPackargs(element, packargs)
             frame.pack(**framepackargs)
         elif framegridargs is not None:
+            self.emitGridargs(element, framegridargs)
             frame.grid(**framegridargs)
+
 
         return frame
 
@@ -271,7 +391,7 @@ class GUI_MakerMixin(object):
             framegridargs = self.extractGridargs(element)
 
         options = self.xlateArgs(element.attrib)
-        frame = Tkinter.Frame(master, **options)
+        frame = self.createFrame(master, **options)
 
         cblist = element.findall(CHECKBUTTON)
         if len(cblist) > 0:
@@ -285,7 +405,7 @@ class GUI_MakerMixin(object):
         else:
             rblist = element.findall(RADIOBUTTON)
             if len(rblist) > 0:
-                setattr(self, varname, varfunc)
+                self.createAttr(varname, varfunc)
 
                 for rb in rblist:
                     self.processSubelement(frame, rb)
@@ -297,7 +417,7 @@ class GUI_MakerMixin(object):
             else:
                 sslist = element.findall(SCALE)
                 if len(sslist) > 0:
-                    setattr(self, varname, varfunc)
+                    self.createAttr(varname, varfunc)
 
                     for ss in sslist:
                         self.processSubelement(frame, ss)
@@ -310,12 +430,18 @@ class GUI_MakerMixin(object):
                     for subelement in element:
                         self.processSubelement(frame, subelement)
 
+        element.tag = 'Frame'
+        popFrame()
         if framepackargs is None and framegridargs is None:
+            self.emitPackargs(element, '')
             frame.pack()
         elif framepackargs is not None:
+            self.emitPackargs(element, framepackargs)
             frame.pack(**framepackargs)
         elif framegridargs is not None:
+            self.emitGridargs(element, framegridargs)
             frame.grid(**framegridargs)
+
 
         return frame
 
@@ -324,7 +450,7 @@ class GUI_MakerMixin(object):
         if textvar is not None and NAME in textvar.attrib:
             varfunc = getattr(Tkinter, textvar.attrib[TYPEVAR])()
             varname = textvar.attrib[NAME]
-            setattr(self, varname, varfunc)
+            self.createAttr(varname, varfunc)
             options[TEXTVARIABLE] = varfunc
             element.remove(textvar)
             # index = element._children.index(textvar)
@@ -357,7 +483,7 @@ class GUI_MakerMixin(object):
                 funcname = optvar.attrib[ONCLICK]
                 options[COMMAND] = self.makeCommand(funcname, varname)
 
-            setattr(self, varname, varfunc)
+            self.createAttr(varname, varfunc)
             options[VARIABLE] = varfunc
             index = element._children.index(optvar)
             del (element._children[index])
@@ -455,7 +581,7 @@ class GUI_MakerMixin(object):
         if NAME in options:
             varname = options[NAME]
             varfunc = options[TYPEVAR]()
-            setattr(self, varname, varfunc)
+            self.createAttr(varname, varfunc)
             if DEFAULT in options:
                 default = options[DEFAULT]
                 if default == 'true':
@@ -533,12 +659,12 @@ class GUI_MakerMixin(object):
 
         frame = None
         if uniqueframe:
-            frame = Tkinter.Frame(master, **options)
+            frame = self.createFrame(master, **options)
 
         numDataItems = len(data.values()[0])
         for n in range(numDataItems):
             if not uniqueframe:
-                frame = Tkinter.Frame(master, **options)
+                frame = self.createFrame(master, **options)
 
             for elem in element:
                 subelem = copy.deepcopy(elem)
@@ -554,7 +680,7 @@ class GUI_MakerMixin(object):
                     widget = self.processSubelement(frame, subelem)
 
                 except Exception as e:
-                    print e.message
+                    print(e.message)
 
             if not uniqueframe:
                 if framepackargs is None and framegridargs is None:
@@ -624,14 +750,29 @@ class GUI_MakerMixin(object):
                         if COMMAND in options and TEXT in options:
                             options[COMMAND] = self.makeCommand(options[COMMAND], options[TEXT])
 
-            widget_factory = getattr(Tkinter, element.tag.capitalize())
+            widgetName = element.tag.capitalize()
+            widget_factory = getattr(Tkinter, widgetName)
+
 
             if packargs is None and gridargs is None:
+                self.emitWidget(widgetName, master, options)
                 return widget_factory(master, **options)
             elif packargs is not None:
+                self.emitWidget(widgetName, master, options, packargs)
                 widget_factory(master, **options).pack(**packargs)
             elif gridargs is not None:
+                self.emitWidget(widgetName, master, options, gridargs)
                 widget_factory(master, **options).grid(**gridargs)
+
+
+
+class TkGUI_MakerMixin(GUI_MakerMixin, TkinterInterface):
+    def __init__(self, topLevelWindow=None, outputfilename=None):
+        super(GUI_MakerMixin, self).__init__(topLevelWindow=topLevelWindow, outputfilename=outputfilename)
+
+class Test(TkGUI_MakerMixin):
+    def __init__(self, topLevelWindow=None, outputfilename=None):
+        super(TkGUI_MakerMixin, self).__init__(topLevelWindow=topLevelWindow, outputfilename=outputfilename)
 
     def noop(self, *arg):
         """
@@ -681,8 +822,8 @@ if __name__ == '__main__':
     root = Tkinter.Tk()
     root.geometry("230x200")
 
-    m1 = GUI_MakerMixin(root)
-    fr = m1.makeGUI(root, "gui10.xml")
+    m1 = Test(root, "test")
+    fr = m1.makeGUI(root, "gui3.xml")
     fr.pack()
 
     root.mainloop()

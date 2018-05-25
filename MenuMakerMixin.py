@@ -113,11 +113,11 @@ class MenuMakerMixin(object):
 
         for key in kwargs:
             try:
-                val = getattr(self,kwargs[key])
+                val = self.GetAttr(self,kwargs[key])
                 kwargs[key] = val
             except:
                 try:
-                    val = getattr(Tkinter,kwargs[key])
+                    val = self.GetAttr(Tkinter,kwargs[key])
                     kwargs[key] = val
                 except:
                     pass
@@ -426,7 +426,7 @@ class MenuMakerMixin(object):
         kwargs = elem.attrib
         imageFile = kwargs[IMAGE]
         menuName = kwargs[NAME]
-        kwargs[RELIEF] = getattr(Tkconstants,kwargs[RELIEF])
+        kwargs[RELIEF] = self.GetAttr(Tkconstants,kwargs[RELIEF])
         kwargs[NAME] = menuName.lower()
         icon = createIcon(imageFile)
         kwargs[IMAGE] = icon
