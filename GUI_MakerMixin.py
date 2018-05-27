@@ -1,11 +1,11 @@
 #Gui_MakerMixin
 from __future__ import print_function
 import sys
-import Tkinter
+#import Tkinter
+from TkinterInterface import mFrame, mRootWindow, mGraphicsLibName, mPartial
 import xml.etree.ElementTree as ET
-from functools import partial
+# from functools import partial
 from StringVarPlus import StringVarPlus
-from TkinterInterface import TkinterInterface
 import copy
 
 
@@ -18,6 +18,7 @@ REPGROUP = 'repgroup' # tags="" data="" uniqueframe="false"
 GRID = 'grid'
 INCLUDE = 'include'
 TEXTVARIABLE = 'textvariable'
+FRAME = 'frame'
 
 #Regular Tags that require special treatment
 CHECKBUTTON = 'checkbutton'
@@ -99,14 +100,14 @@ def extractRgDataDict(data):
 class GUI_MakerMixin(object):
     def __init__(self, topLevelWindow=None, outputfilename=None):
         if topLevelWindow is None:
-            self.topLevelWindow = Tkinter.Tk()
+            self.topLevelWindow = mRootWindow()
         else:
             self.topLevelWindow = topLevelWindow
 
         self.outputfp = sys.stdout
         if outputfilename is not None:
-            self.outputfp=sys.stdout
-           # self.outputfp = open(outputfilename,'w')
+            #self.outputfp=sys.stdout
+           self.outputfp = open(outputfilename,'w')
 
         self.emit("Hello World")
 
@@ -124,37 +125,38 @@ class GUI_MakerMixin(object):
                 return fnName
         else:
             if isinstance(fnName, str):
-                f = partial(getattr(self, fnName), arg)
+                f = mPartial(getattr(self, fnName), arg)
                 setattr(f,'__name__',fnName)
                 return f
             else:
-                f = partial(fnName, arg)
+                f = mPartial(fnName, arg)
                 setattr(f, '__name__', fnName)
                 return f
 
     def xlateArgs(self,kwargs):
         for key in kwargs:
-            try:
-                val = getattr(self,kwargs[key])
-                kwargs[key] = val
-            except:
+            if key != COMMAND:
                 try:
-                    val = getattr(Tkinter,kwargs[key])
+                    val = getattr(self, kwargs[key])
                     kwargs[key] = val
                 except:
-                    if '+' in kwargs[key]:
-                        try:
-                            tmp = kwargs[key].split('+')
-                            val=""
-                            for v in tmp:
-                                val += getattr(Tkinter, v)
+                    try:
+                        val = getattr(mGraphicsLibName, kwargs[key])
+                        kwargs[key] = val
+                    except:
+                        if '+' in kwargs[key]:
+                            try:
+                                tmp = kwargs[key].split('+')
+                                val=""
+                                for v in tmp:
+                                    val += getattr(mGraphicsLibName, v)
 
-                            kwargs[key] = val
-                        except:
+                                kwargs[key] = val
+                            except:
+                                pass
+
+                        else:
                             pass
-
-                    else:
-                        pass
 
         return kwargs
 
@@ -171,7 +173,7 @@ class GUI_MakerMixin(object):
 
         #self.emitPackargs(element, '')
 
-        if self.outputfp is not None:
+        if self.outputfp is not None and self.outputfp != sys.stdout:
             self.outputfp.close()
 
         return frame
@@ -205,7 +207,7 @@ class GUI_MakerMixin(object):
                 try:
                     func = getattr(self, fnName)
                 except:
-                    func = getattr(Tkinter, fnName)
+                    func = getattr(mGraphicsLibName, fnName)
 
                 if run:
                     return func()
@@ -261,7 +263,10 @@ class GUI_MakerMixin(object):
         args = args[0]
 
         if COMMAND in args:
-            args[COMMAND] = args[COMMAND].func.__name__
+            try:
+                args[COMMAND] = args[COMMAND].func.__name__
+            except:
+                args[COMMAND] = args[COMMAND].__func__.__name__
 
         if VARIABLE in args:
             args[VARIABLE] = str(args[VARIABLE])
@@ -294,7 +299,7 @@ class GUI_MakerMixin(object):
         #str = (stacklevel * '\t') + "Frame"
         self.emitFrame("Frame",master, *args, **kwargs)
         pushFrame()
-        return Tkinter.Frame(master, *args, **kwargs)
+        return mFrame(master, *args, **kwargs)
 
     def createAttr(self, varname, varfunc):
         return setattr(self, varname, varfunc)
@@ -307,8 +312,8 @@ class GUI_MakerMixin(object):
 
         widget = self.processXmlElement(frame, subelement)
 
-        if subelement.tag == 'form':
-            subelement.tag = 'frame'
+        if subelement.tag == FORM or subelement.tag == INCLUDE:
+            subelement.tag = FRAME.capitalize()
 
         if packargs is None and gridargs is None and widget is not None:
             self.emitPackargs(subelement, '')
@@ -448,7 +453,7 @@ class GUI_MakerMixin(object):
     def processEntryOptions(self, element, options):
         textvar = element.find(VARIABLE)
         if textvar is not None and NAME in textvar.attrib:
-            varfunc = getattr(Tkinter, textvar.attrib[TYPEVAR])()
+            varfunc = getattr(mGraphicsLibName, textvar.attrib[TYPEVAR])()
             varname = textvar.attrib[NAME]
             self.createAttr(varname, varfunc)
             options[TEXTVARIABLE] = varfunc
@@ -462,7 +467,7 @@ class GUI_MakerMixin(object):
     def processCheckbuttonOptions(self, element, options):
         optvar = element.find(VARIABLE)
         if optvar is not None:
-            varfunc = getattr(Tkinter, optvar.attrib[TYPEVAR])()
+            varfunc = getattr(mGraphicsLibName, optvar.attrib[TYPEVAR])()
             default = False
             if DEFAULT in optvar.attrib:
                 default = optvar.attrib[DEFAULT]
@@ -560,14 +565,18 @@ class GUI_MakerMixin(object):
         if FILENAME in elem.attrib:
             filename = elem.attrib[FILENAME]
             elem = self.parseXMLFile(filename)
-            return self.processXmlElement(parent, elem)
+            self.emitFrame(FRAME.capitalize(), parent)
+            pushFrame()
+            val = self.processXmlElement(parent, elem)
+            popFrame()
+            return val
 
 
     def processButtonOptions(self, element, options):
         if TEXT in options:
             btnName = options[TEXT]
 
-            if COMMAND in options:
+            if COMMAND in options and isinstance(options[COMMAND], str):
                 options[COMMAND] = self.makeCommand(options[COMMAND], btnName)
 
             elif ONCLICK in options:
@@ -747,26 +756,27 @@ class GUI_MakerMixin(object):
                         gridargs = self.extractGridargs(subelement)
                     else:
                         options[subelement.tag] = subelement.text
-                        if COMMAND in options and TEXT in options:
+                        if COMMAND in options and TEXT in options and isinstance(options[COMMAND], str):
                             options[COMMAND] = self.makeCommand(options[COMMAND], options[TEXT])
 
             widgetName = element.tag.capitalize()
-            widget_factory = getattr(Tkinter, widgetName)
+            widget_factory = getattr(mGraphicsLibName, widgetName)
 
 
             if packargs is None and gridargs is None:
-                self.emitWidget(widgetName, master, options)
+                self.emitWidget(widgetName, master, copy.copy(options))
                 return widget_factory(master, **options)
             elif packargs is not None:
-                self.emitWidget(widgetName, master, options, packargs)
+                self.emitWidget(widgetName, master, copy.copy(options), copy.copy(packargs))
                 widget_factory(master, **options).pack(**packargs)
             elif gridargs is not None:
-                self.emitWidget(widgetName, master, options, gridargs)
+                self.emitWidget(widgetName, master, copy.copy(options), copy.copy(gridargs))
                 widget_factory(master, **options).grid(**gridargs)
 
 
 
-class TkGUI_MakerMixin(GUI_MakerMixin, TkinterInterface):
+
+class TkGUI_MakerMixin(GUI_MakerMixin):
     def __init__(self, topLevelWindow=None, outputfilename=None):
         super(GUI_MakerMixin, self).__init__(topLevelWindow=topLevelWindow, outputfilename=outputfilename)
 
@@ -788,7 +798,7 @@ class Test(TkGUI_MakerMixin):
                     myarg = arg[0]
 
                 try:
-                    if isinstance(myarg, StringVarPlus) or isinstance(myarg, Tkinter.IntVar):
+                    if isinstance(myarg, StringVarPlus) or isinstance(myarg, mGraphicsLibName.IntVar):
                         # myarg = myarg.get()
                         print("noop called: %s:%s" % (arg[0],myarg.get()))
                         return
@@ -798,7 +808,7 @@ class Test(TkGUI_MakerMixin):
                 myarg = arg
         else:
             myarg = arg[0]
-            print("noop called: %s:%s:%s" % (myarg, arg[1], getattr(self,myarg).get()))
+            print("noop called: %s:%s:%s" % (myarg, arg[1], getattr(self, myarg).get()))
             return
         print("noop called: %s" % myarg)
 
@@ -819,10 +829,10 @@ class Test(TkGUI_MakerMixin):
             print("%s:%s" % (label, value))
 
 if __name__ == '__main__':
-    root = Tkinter.Tk()
+    root = mRootWindow()
     root.geometry("230x200")
 
-    m1 = Test(root, "test")
+    m1 = Test(root)
     fr = m1.makeGUI(root, "gui3.xml")
     fr.pack()
 

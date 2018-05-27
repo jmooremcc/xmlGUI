@@ -1,8 +1,23 @@
 #
 import Tkinter
+from functools import partial
 
-class TkinterInterface(object):
-    def GetAttr(self, object, name, default=None):
-        getattr(object, name, default=default)
 
+# def mGetAttr(object, name):
+#     return getattr(object, name)
+
+
+def mFrame(master, *args, **kwargs):
+    return Tkinter.Frame(master, *args, **kwargs)
+
+# def mSetAttr(p_object, name, value):
+#     return setattr(p_object, name, value)
+
+def mRootWindow():
+    return Tkinter.Tk()
+
+mGraphicsLibName = Tkinter
+
+def mPartial( func, *args, **keywords):
+    return partial( func, *args, **keywords)
 
