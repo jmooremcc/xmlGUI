@@ -135,7 +135,7 @@ class GUI_MakerMixin(object):
 
     def xlateArgs(self,kwargs):
         for key in kwargs:
-            if key != COMMAND:
+            if key != COMMAND and key != ONCLICK:
                 try:
                     val = getattr(self, kwargs[key])
                     kwargs[key] = val
@@ -312,7 +312,7 @@ class GUI_MakerMixin(object):
 
         widget = self.processXmlElement(frame, subelement)
 
-        if subelement.tag == FORM or subelement.tag == INCLUDE:
+        if subelement.tag == FORM or subelement.tag == INCLUDE or subelement.tag == REPGROUP:
             subelement.tag = FRAME.capitalize()
 
         if packargs is None and gridargs is None and widget is not None:
@@ -668,6 +668,8 @@ class GUI_MakerMixin(object):
 
         frame = None
         if uniqueframe:
+            self.emitFrame(FRAME.capitalize(), master)
+            pushFrame()
             frame = self.createFrame(master, **options)
 
         numDataItems = len(data.values()[0])
@@ -692,22 +694,33 @@ class GUI_MakerMixin(object):
                     print(e.message)
 
             if not uniqueframe:
+                subelem.tag = FRAME.capitalize()
+                popFrame()
                 if framepackargs is None and framegridargs is None:
+                    self.emitPackargs(subelem, '')
                     frame.pack()
                 elif framepackargs is not None:
+                    self.emitPackargs(subelem, copy.copy(framepackargs))
                     frame.pack(**framepackargs)
                 elif framegridargs is not None:
+                    self.emitPackargs(subelem, copy.copy(framegridargs))
                     frame.grid(**framegridargs)
 
 
         if uniqueframe:
+            subelem.tag = FRAME.capitalize()
+            popFrame()
             if framepackargs is None and framegridargs is None:
+                self.emitPackargs(subelem, '')
                 frame.pack()
             elif framepackargs is not None:
+                self.emitPackargs(subelem, copy.copy(framepackargs))
                 frame.pack(**framepackargs)
             elif framegridargs is not None:
+                self.emitPackargs(subelem, copy.copy(framegridargs))
                 frame.grid(**framegridargs)
 
+            popFrame()
             return frame
 
 
@@ -833,7 +846,7 @@ if __name__ == '__main__':
     root.geometry("230x200")
 
     m1 = Test(root)
-    fr = m1.makeGUI(root, "gui3.xml")
+    fr = m1.makeGUI(root, "menu.xml")
     fr.pack()
 
     root.mainloop()

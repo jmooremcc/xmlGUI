@@ -113,11 +113,11 @@ class MenuMakerMixin(object):
 
         for key in kwargs:
             try:
-                val = self.GetAttr(self,kwargs[key])
+                val = getattr(self,kwargs[key])
                 kwargs[key] = val
             except:
                 try:
-                    val = self.GetAttr(Tkinter,kwargs[key])
+                    val = getattr(Tkinter,kwargs[key])
                     kwargs[key] = val
                 except:
                     pass
@@ -266,11 +266,16 @@ class MenuMakerMixin(object):
                         optvar = StringVarPlus()
                         kwargs[VARIABLE] = optvar
                         self.addOptionVarRef(optvar, id)
-                        kwargs[LABEL] = kwargs[VALUE] = opName
+                        kwargs[LABEL] = opName
                         if n == defaultindex:
                             optvar.set(kwargs['onvalue'])
                         else:
                             optvar.set(kwargs['offvalue'])
+
+                        if COMMAND in kwargs:
+                            kwargs[COMMAND] = self.makeCommand(funcName, optvar)
+
+                        # kwargs[VALUE] = optvar.get()
 
                         optmenu.add_checkbutton(**kwargs)
                 else:
@@ -283,6 +288,7 @@ class MenuMakerMixin(object):
 
                         for n, opName in enumerate(olist):
                             kwargs[LABEL] = kwargs[VALUE] = opName
+                            # kwargs[VALUE] =
                             if n == defaultindex:
                                 optvar.set(olist[n])
 
@@ -426,7 +432,7 @@ class MenuMakerMixin(object):
         kwargs = elem.attrib
         imageFile = kwargs[IMAGE]
         menuName = kwargs[NAME]
-        kwargs[RELIEF] = self.GetAttr(Tkconstants,kwargs[RELIEF])
+        kwargs[RELIEF] = getattr(Tkconstants,kwargs[RELIEF])
         kwargs[NAME] = menuName.lower()
         icon = createIcon(imageFile)
         kwargs[IMAGE] = icon
@@ -478,8 +484,10 @@ class MenuMakerMixin(object):
         try:
             dispatcher[elem.tag](parent, elem)
         except Exception as e:
-            print("%s is not a menu tag" % elem.tag)
-            raise Exception("%s is not a menu tag" % elem.tag)
+            print(e.message)
+            raise e
+            # print("%s is not a menu tag" % elem.tag)
+            # raise Exception("%s is not a menu tag" % elem.tag)
 
 
     def myDataprovider(self):
@@ -551,9 +559,9 @@ if __name__ == "__main__":
     # frame.pack(side=TOP, fill=BOTH)
     m1 = MenuMakerMixin(root)
     # m1.generateMenu("menu2.xml", root)
-    val = m1.generateMenu("menu.xml", root)
+    # val = m1.generateMenu("menu.xml", root)
     # m1.generateMenu("menu2.xml", root)
-    m1.generateMenu("menu3.xml", root)
+    m1.generateMenu("menu2.xml", root)
     popupMenu = m1.generateMenu("menu4.xml")
 
 
