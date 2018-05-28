@@ -1,10 +1,17 @@
 # MenuMakerMixin
 
 import xml.etree.ElementTree as ET
-from Tkinter import *
+try:
+    from Tkinter import *
+    import Tkconstants
+except ImportError:
+    from tkinter import *
+    import tkinter.constants
+    Tkconstants = tkinter.constants
+
 from functools import partial
 from PIL import Image, ImageTk
-import Tkconstants
+
 from time import sleep
 from StringVarPlus import StringVarPlus
 
@@ -78,6 +85,18 @@ LABEL = 'label'
 DEFAULTINDEX = 'defaultindex'
 PACK='pack'
 FILENAME = 'filename'
+NOARG = 'noarg'
+
+def GetAttr(parent, fnname):
+    nlist = [parent] + fnname.split('.')
+    numitems = len(nlist)
+    if numitems > 2:
+        for n in range(numitems - 1):
+            nlist[n+1] = GetAttr(nlist[n],nlist[n+1])
+
+        return nlist[numitems - 1]
+    else:
+        return getattr(parent,fnname)
 
 
 class MenuMakerMixin(object):
@@ -142,6 +161,7 @@ class MenuMakerMixin(object):
 
         return tmplist
 
+
     def makeCommand(self, fnName, arg=None):
         """
         makeCommand takes fnName and turns it into an actual reference to the function
@@ -149,10 +169,15 @@ class MenuMakerMixin(object):
         :param arg:
         :return: A reference to the actual function
         """
+        # if arg is None:
+        #     return self.__getattribute__(fnName)
+        # else:
+        #     return partial(self.__getattribute__(fnName), arg)
+
         if arg is None:
-            return self.__getattribute__(fnName)
+            return GetAttr(self, fnName)
         else:
-            return partial(self.__getattribute__(fnName), arg)
+            return partial(GetAttr(self,fnName), arg)
 
     def processChildElement(self, newMenu, child, optionButtonOptvar=None, cbflag=False):
         """
@@ -179,9 +204,20 @@ class MenuMakerMixin(object):
                 kwargs['accelerator'] = "Ctrl+" + ch
                 kwargs[UNDERLINE] = chIndex
 
+            noarg = False
+            if NOARG in child.attrib:
+                if child.attrib[NOARG] == 'true':
+                    noarg = True
+
+                del child.attrib[NOARG]
+
             if ONCLICK in child.attrib:
                 onclickCallbackName = child.attrib[ONCLICK]
-                kwargs[COMMAND] = self.makeCommand(onclickCallbackName, menuItemName)
+                if noarg == True:
+                    kwargs[COMMAND] = self.makeCommand(onclickCallbackName)
+                else:
+                    kwargs[COMMAND] = self.makeCommand(onclickCallbackName, menuItemName)
+
                 if shortcutIndex:
                     self._topLevelWidget.bind_all("<Control-%s>" % ch.lower(), kwargs[COMMAND])
 
@@ -252,7 +288,7 @@ class MenuMakerMixin(object):
                     olist = dataprovider()
 
                 except Exception as e:
-                    print e.message
+                    print(e.message)
                     raise(e)
 
                 defaultindex = 0
@@ -489,6 +525,20 @@ class MenuMakerMixin(object):
             # print("%s is not a menu tag" % elem.tag)
             # raise Exception("%s is not a menu tag" % elem.tag)
 
+def createIcon(imgFilename):
+    """
+    Converts an image into a bitmap that can be used on a menubutton
+    :param imgFilename: str
+    :return: ImageTk.PhotoImage
+    """
+    image = Image.open(imgFilename)
+    image2 = image.resize((30, 30), Image.ANTIALIAS)
+    # setattr(self, iconVarname, ImageTk.PhotoImage(image))
+    return ImageTk.PhotoImage(image2)
+
+class Test(MenuMakerMixin):
+    def __init__(self, topLevelWidget):
+        MenuMakerMixin.__init__(self, topLevelWidget)
 
     def myDataprovider(self):
         """
@@ -497,7 +547,6 @@ class MenuMakerMixin(object):
         """
         values = ['OE2', 'OE3', 'LocalHost']
         return values
-
 
 
     def noop(self, *arg):
@@ -528,20 +577,9 @@ class MenuMakerMixin(object):
 
     def dumpOptvars(self, opt):
         olist = self.getOptionVars()
-        print ""
+        print("")
         for v in olist:
-            print "%s:%s" % (v.Name, v.get())
-
-def createIcon(imgFilename):
-    """
-    Converts an image into a bitmap that can be used on a menubutton
-    :param imgFilename: str
-    :return: ImageTk.PhotoImage
-    """
-    image = Image.open(imgFilename)
-    image2 = image.resize((30, 30), Image.ANTIALIAS)
-    # setattr(self, iconVarname, ImageTk.PhotoImage(image))
-    return ImageTk.PhotoImage(image2)
+            print("%s:%s" % (v.Name, v.get()))
 
 
 if __name__ == "__main__":
@@ -557,11 +595,11 @@ if __name__ == "__main__":
     # setattr(self, name, mb)
     # parent.add_cascade(menu=mb)
     # frame.pack(side=TOP, fill=BOTH)
-    m1 = MenuMakerMixin(root)
+    m1 = Test(root)
     # m1.generateMenu("menu2.xml", root)
     # val = m1.generateMenu("menu.xml", root)
     # m1.generateMenu("menu2.xml", root)
-    m1.generateMenu("menu2.xml", root)
+    m1.generateMenu("menu3.xml", root)
     popupMenu = m1.generateMenu("menu4.xml")
 
 

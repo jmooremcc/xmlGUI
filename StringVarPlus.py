@@ -1,6 +1,13 @@
 #StringVarPlus.py
 
-from Tkinter import *
+# from Tkinter import *
+try:
+    from Tkinter import *
+    import Tkconstants
+except ImportError:
+    from tkinter import *
+    import tkinter.constants
+    Tkconstants = tkinter.constants
 
 class StringVarPlus(StringVar):
     # def __new__(cls, name):
