@@ -14,6 +14,7 @@ from PIL import Image, ImageTk
 
 from time import sleep
 from StringVarPlus import StringVarPlus
+from utilities import GetAttr
 
 """
 <menus>
@@ -87,16 +88,7 @@ PACK='pack'
 FILENAME = 'filename'
 NOARG = 'noarg'
 
-def GetAttr(parent, fnname):
-    nlist = [parent] + fnname.split('.')
-    numitems = len(nlist)
-    if numitems > 2:
-        for n in range(numitems - 1):
-            nlist[n+1] = GetAttr(nlist[n],nlist[n+1])
 
-        return nlist[numitems - 1]
-    else:
-        return getattr(parent,fnname)
 
 
 class MenuMakerMixin(object):
@@ -112,16 +104,16 @@ class MenuMakerMixin(object):
         return root
 
     def generateMenu(self, xmlfile, parent=None):
-        self.root = self.parseXMLFile(xmlfile)
+        self.xmlroot = self.parseXMLFile(xmlfile)
 
-        if self.root.tag != MENUS:
+        if self.xmlroot.tag != MENUS:
             raise Exception("%s does not contain the required menus tag" % xmlfile)
 
-        if self.root[0].tag == MENUBUTTON:
-            self.parseMenuTree(parent, self.root)
+        if self.xmlroot[0].tag == MENUBUTTON:
+            self.parseMenuTree(parent, self.xmlroot)
         else:
             menu = Menu(parent, tearoff=0)
-            self.parseMenuTree(menu, self.root)
+            self.parseMenuTree(menu, self.xmlroot)
             if parent is not None:
                 parent.config(menu=menu)
 
@@ -132,11 +124,11 @@ class MenuMakerMixin(object):
 
         for key in kwargs:
             try:
-                val = getattr(self,kwargs[key])
+                val = GetAttr(self,kwargs[key])
                 kwargs[key] = val
             except:
                 try:
-                    val = getattr(Tkinter,kwargs[key])
+                    val = GetAttr(Tkinter,kwargs[key])
                     kwargs[key] = val
                 except:
                     pass
@@ -206,7 +198,7 @@ class MenuMakerMixin(object):
 
             noarg = False
             if NOARG in child.attrib:
-                if child.attrib[NOARG] == 'true':
+                if child.attrib[NOARG].lower() == 'true':
                     noarg = True
 
                 del child.attrib[NOARG]
@@ -468,7 +460,7 @@ class MenuMakerMixin(object):
         kwargs = elem.attrib
         imageFile = kwargs[IMAGE]
         menuName = kwargs[NAME]
-        kwargs[RELIEF] = getattr(Tkconstants,kwargs[RELIEF])
+        kwargs[RELIEF] = GetAttr(Tkconstants,kwargs[RELIEF])
         kwargs[NAME] = menuName.lower()
         icon = createIcon(imageFile)
         kwargs[IMAGE] = icon

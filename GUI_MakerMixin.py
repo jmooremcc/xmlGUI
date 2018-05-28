@@ -1,12 +1,13 @@
 #Gui_MakerMixin
 from __future__ import print_function
 import sys
+import copy
 #import Tkinter
 from TkinterInterface import mFrame, mRootWindow, mGraphicsLibName, mPartial
 import xml.etree.ElementTree as ET
 # from functools import partial
 from StringVarPlus import StringVarPlus
-import copy
+from utilities import GetAttr
 
 
 #Special Tags
@@ -43,6 +44,7 @@ FILENAME = 'filename'
 TAGS = 'tags'
 DATA = 'data'
 UNIQUEFRAME = 'uniqueframe'
+NOARG = 'noarg'
 
 stack = []
 stacklevel = 0
@@ -120,12 +122,12 @@ class GUI_MakerMixin(object):
         """
         if arg is None:
             if isinstance(fnName, str):
-                return getattr(self, fnName)
+                return GetAttr(self, fnName)
             else:
                 return fnName
         else:
             if isinstance(fnName, str):
-                f = mPartial(getattr(self, fnName), arg)
+                f = mPartial(GetAttr(self, fnName), arg)
                 setattr(f,'__name__',fnName)
                 return f
             else:
@@ -137,11 +139,11 @@ class GUI_MakerMixin(object):
         for key in kwargs:
             if key != COMMAND and key != ONCLICK:
                 try:
-                    val = getattr(self, kwargs[key])
+                    val = GetAttr(self, kwargs[key])
                     kwargs[key] = val
                 except:
                     try:
-                        val = getattr(mGraphicsLibName, kwargs[key])
+                        val = GetAttr(mGraphicsLibName, kwargs[key])
                         kwargs[key] = val
                     except:
                         if '+' in kwargs[key]:
@@ -149,7 +151,7 @@ class GUI_MakerMixin(object):
                                 tmp = kwargs[key].split('+')
                                 val=""
                                 for v in tmp:
-                                    val += getattr(mGraphicsLibName, v)
+                                    val += GetAttr(mGraphicsLibName, v)
 
                                 kwargs[key] = val
                             except:
@@ -205,9 +207,9 @@ class GUI_MakerMixin(object):
             fnName = self.extractAttrib(elem, attrib)
             if fnName is not None:
                 try:
-                    func = getattr(self, fnName)
+                    func = GetAttr(self, fnName)
                 except:
-                    func = getattr(mGraphicsLibName, fnName)
+                    func = GetAttr(mGraphicsLibName, fnName)
 
                 if run:
                     return func()
@@ -453,7 +455,7 @@ class GUI_MakerMixin(object):
     def processEntryOptions(self, element, options):
         textvar = element.find(VARIABLE)
         if textvar is not None and NAME in textvar.attrib:
-            varfunc = getattr(mGraphicsLibName, textvar.attrib[TYPEVAR])()
+            varfunc = GetAttr(mGraphicsLibName, textvar.attrib[TYPEVAR])()
             varname = textvar.attrib[NAME]
             self.createAttr(varname, varfunc)
             options[TEXTVARIABLE] = varfunc
@@ -467,7 +469,7 @@ class GUI_MakerMixin(object):
     def processCheckbuttonOptions(self, element, options):
         optvar = element.find(VARIABLE)
         if optvar is not None:
-            varfunc = getattr(mGraphicsLibName, optvar.attrib[TYPEVAR])()
+            varfunc = GetAttr(mGraphicsLibName, optvar.attrib[TYPEVAR])()
             default = False
             if DEFAULT in optvar.attrib:
                 default = optvar.attrib[DEFAULT]
@@ -486,7 +488,7 @@ class GUI_MakerMixin(object):
 
             if ONCLICK in optvar.attrib:
                 funcname = optvar.attrib[ONCLICK]
-                options[COMMAND] = self.makeCommand(funcname, varname)
+                options[COMMAND] = self.makeCommand(funcname, self.processNoArg(optvar.attrib, varname))
 
             self.createAttr(varname, varfunc)
             options[VARIABLE] = varfunc
@@ -505,7 +507,7 @@ class GUI_MakerMixin(object):
                 varname = "rb" + options[TEXT]
             else:
                 raise Exception("Radiobutton Variable Tag missing name attribute")
-            # varfunc = getattr(self, varname)
+            # varfunc = GetAttr(self, varname)
             varfunc = self.extractFunction(optvar, NAME, run=False)
 
             default = False
@@ -519,7 +521,7 @@ class GUI_MakerMixin(object):
 
             if ONCLICK in optvar.attrib:
                 funcname = optvar.attrib[ONCLICK]
-                options[COMMAND] = self.makeCommand(funcname, varname)
+                options[COMMAND] = self.makeCommand(funcname, self.processNoArg(optvar.attrib, varname))
 
             options[VARIABLE] = varfunc
             element.remove(optvar)
@@ -538,7 +540,7 @@ class GUI_MakerMixin(object):
                 varname = "ss" + options[TEXT]
             else:
                 raise Exception("Scale Variable Tag missing name attribute")
-            # varfunc = getattr(self, varname)
+            # varfunc = GetAttr(self, varname)
             varfunc = self.extractFunction(optvar, NAME, run=False)
 
             default = False
@@ -552,7 +554,7 @@ class GUI_MakerMixin(object):
 
             if ONCLICK in optvar.attrib:
                 funcname = optvar.attrib[ONCLICK]
-                options[COMMAND] = self.makeCommand(funcname, varname)
+                options[COMMAND] = self.makeCommand(funcname, self.processNoArg(optvar.attrib, varname))
 
             options[VARIABLE] = varfunc
             element.remove(optvar)
@@ -571,16 +573,27 @@ class GUI_MakerMixin(object):
             popFrame()
             return val
 
+    def processNoArg(self, options, var):
+        noarg = False
+        if NOARG in options:
+            if options[NOARG].lower() == 'true':
+                noarg = True
+
+        if noarg:
+            return None
+        else:
+            return var
+
 
     def processButtonOptions(self, element, options):
         if TEXT in options:
             btnName = options[TEXT]
 
             if COMMAND in options and isinstance(options[COMMAND], str):
-                options[COMMAND] = self.makeCommand(options[COMMAND], btnName)
+                options[COMMAND] = self.makeCommand(options[COMMAND], self.processNoArg(options, btnName))
 
             elif ONCLICK in options:
-                options[COMMAND] = self.makeCommand(options[ONCLICK], btnName)
+                options[COMMAND] = self.makeCommand(options[ONCLICK], self.processNoArg(options, btnName))
                 del (options[ONCLICK])
 
         return options
@@ -770,10 +783,10 @@ class GUI_MakerMixin(object):
                     else:
                         options[subelement.tag] = subelement.text
                         if COMMAND in options and TEXT in options and isinstance(options[COMMAND], str):
-                            options[COMMAND] = self.makeCommand(options[COMMAND], options[TEXT])
+                            options[COMMAND] = self.makeCommand(options[COMMAND], self.processNoArg(options, options[TEXT]))
 
             widgetName = element.tag.capitalize()
-            widget_factory = getattr(mGraphicsLibName, widgetName)
+            widget_factory = GetAttr(mGraphicsLibName, widgetName)
 
 
             if packargs is None and gridargs is None:
@@ -806,7 +819,7 @@ class Test(TkGUI_MakerMixin):
         if len(arg) == 1:
             if type(arg) == tuple:
                 try:
-                    myarg = getattr(self, arg[0])
+                    myarg = GetAttr(self, arg[0])
                 except:
                     myarg = arg[0]
 
@@ -821,7 +834,7 @@ class Test(TkGUI_MakerMixin):
                 myarg = arg
         else:
             myarg = arg[0]
-            print("noop called: %s:%s:%s" % (myarg, arg[1], getattr(self, myarg).get()))
+            print("noop called: %s:%s:%s" % (myarg, arg[1], GetAttr(self, myarg).get()))
             return
         print("noop called: %s" % myarg)
 
@@ -846,7 +859,7 @@ if __name__ == '__main__':
     root.geometry("230x200")
 
     m1 = Test(root)
-    fr = m1.makeGUI(root, "menu.xml")
+    fr = m1.makeGUI(root, "gui10.xml")
     fr.pack()
 
     root.mainloop()
