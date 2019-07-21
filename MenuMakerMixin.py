@@ -9,12 +9,14 @@ except ImportError:
     import tkinter.constants
     Tkconstants = tkinter.constants
 
+from TkinterInterface import mRootWindow
+
 from functools import partial
 from PIL import Image, ImageTk
 
 from time import sleep
 from StringVarPlus import StringVarPlus
-from utilities import GetAttr
+from utilities import GetAttr, createIcon
 
 """
 <menus>
@@ -92,13 +94,18 @@ NOARG = 'noarg'
 
 
 class MenuMakerMixin(object):
-    def __init__(self, topLevelWidget):
-        self._topLevelWidget = topLevelWidget
+    def __init__(self, topLevelWidget=None):
+        if topLevelWidget is None:
+            self.topLevelWindow = mRootWindow()
+        else:
+            self._topLevelWidget = topLevelWidget
+
         self._optionMenusList = {}
         self._optionCount = 0
         self.topmenu = None
 
     def parseXMLFile(self, xmlfile):
+        fname = None
         tree = ET.parse(xmlfile)
         root = tree.getroot()
         return root
@@ -120,7 +127,7 @@ class MenuMakerMixin(object):
             return menu
 
     def xlateArgs(self,kwargs):
-        import Tkinter
+        # import Tkinter
 
         for key in kwargs:
             try:
@@ -128,7 +135,7 @@ class MenuMakerMixin(object):
                 kwargs[key] = val
             except:
                 try:
-                    val = GetAttr(Tkinter,kwargs[key])
+                    val = GetAttr(tkinter,kwargs[key])
                     kwargs[key] = val
                 except:
                     pass
@@ -171,7 +178,8 @@ class MenuMakerMixin(object):
         else:
             return partial(GetAttr(self,fnName), arg)
 
-    def processChildElement(self, newMenu, child, optionButtonOptvar=None, cbflag=False):
+    def processChildElement(self, newMenu,
+                            child, optionButtonOptvar=None, cbflag=False):
         """
         Converts attributes into kwargs and adds a command to newMenu object
         :param newMenu: Menu
@@ -517,16 +525,7 @@ class MenuMakerMixin(object):
             # print("%s is not a menu tag" % elem.tag)
             # raise Exception("%s is not a menu tag" % elem.tag)
 
-def createIcon(imgFilename):
-    """
-    Converts an image into a bitmap that can be used on a menubutton
-    :param imgFilename: str
-    :return: ImageTk.PhotoImage
-    """
-    image = Image.open(imgFilename)
-    image2 = image.resize((30, 30), Image.ANTIALIAS)
-    # setattr(self, iconVarname, ImageTk.PhotoImage(image))
-    return ImageTk.PhotoImage(image2)
+
 
 class Test(MenuMakerMixin):
     def __init__(self, topLevelWidget):

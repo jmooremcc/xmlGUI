@@ -3,11 +3,19 @@ from __future__ import print_function
 import sys
 import copy
 #import Tkinter
+try:
+    from Tkinter import *
+    import Tkconstants
+except ImportError:
+    from tkinter import *
+    import tkinter.constants
+    Tkconstants = tkinter.constants
+
 from TkinterInterface import mFrame, mRootWindow, mGraphicsLibName, mPartial
 import xml.etree.ElementTree as ET
 # from functools import partial
 from StringVarPlus import StringVarPlus
-from utilities import GetAttr
+from utilities import GetAttr, createIcon, createPhotoImage
 
 
 #Special Tags
@@ -20,6 +28,15 @@ GRID = 'grid'
 INCLUDE = 'include'
 TEXTVARIABLE = 'textvariable'
 FRAME = 'frame'
+IMAGE = 'image'
+PLACE = 'place'
+PHOTOIMAGE = 'photoimage'
+ROTATION = 'rotation'
+CONFIGURE = 'configure'
+OBJ = 'obj'
+EXPR ='expr'
+COLUMN = 'column'
+ROW = 'row'
 
 #Regular Tags that require special treatment
 CHECKBUTTON = 'checkbutton'
@@ -27,8 +44,9 @@ RADIOBUTTON = 'radiobutton'
 SCALE = 'scale'
 BUTTON = 'button'
 ENTRY = 'entry'
+LABEL = 'label'
 
-SPECIALTAGS = [CHECKBUTTON,RADIOBUTTON,SCALE,BUTTON,ENTRY,VARIABLE]
+SPECIALTAGS = [CHECKBUTTON,RADIOBUTTON,SCALE,BUTTON,ENTRY,VARIABLE,TEXTVARIABLE,LABEL, CONFIGURE]
 
 #Special Attributes
 ONCLICK = 'onclick'
@@ -38,6 +56,7 @@ NAME = 'name'
 GROUPLIST = 'grouplist'
 DEFAULT = 'default'
 VARNAME = 'varname'
+VARNAMES = 'varnames'
 VALUE = 'value'
 TEXT = 'text'
 FILENAME = 'filename'
@@ -97,6 +116,143 @@ def extractRgDataDict(data):
 
     return datadict
 
+def GetAttr(parent, fnname):
+    nlist = [parent] + fnname.split('.')
+    numitems = len(nlist)
+    if numitems > 2:
+        for n in range(numitems - 1):
+            nlist[n + 1] = GetAttr(nlist[n], nlist[n + 1])
+
+        return nlist[numitems - 1]
+    else:
+        return getattr(parent, fnname)
+
+def xlateArgs(parent,kwargs):
+    for key in kwargs:
+        if key != COMMAND and key != ONCLICK:
+            try:
+                val = GetAttr(parent, kwargs[key])
+                kwargs[key] = val
+            except:
+                try:
+                    val = GetAttr(mGraphicsLibName, kwargs[key])
+                    kwargs[key] = val
+                except:
+                    if '+' in kwargs[key]:
+                        try:
+                            tmp = kwargs[key].split('+')
+                            val=""
+                            for v in tmp:
+                                val += GetAttr(mGraphicsLibName, v)
+
+                            kwargs[key] = val
+                        except:
+                            pass
+
+                    else:
+                        pass
+
+    return kwargs
+
+
+class generateFrame():
+    def __init__(self, parent, element=None, frametype=PACK, frameargs=None, framekwargs=None):
+        self.parent = parent
+        self.frame = None
+        self.layoutargs = None
+
+        self.frametype = frametype
+        self.frameargs = frameargs
+        self.framekwargs = framekwargs
+
+        if element is not None:
+            self.processElement(element)
+
+        options = xlateArgs(self, element.attrib)
+        self.frame = Frame(parent, **options)
+
+
+    @property
+    def Frame(self):
+        return self.frame
+
+    def closeFrame(self):
+        if self.frametype == PACK:
+            self.frame.pack(self.layoutargs)
+        elif self.frametype == GRID:
+            self.frame.grid(self.layoutargs)
+        elif self.frametype == PLACE:
+            self.frame.place(self.layoutargs)
+
+    def processElement(self, element):
+        self.framekwargs = None
+
+        if element.tag == PACK:
+            self.layoutargs = self.extractPackargs(element)
+            self.frametype = PACK
+        elif element.tag == GRID:
+            self.layoutargs = self.extractGridargs(element)
+            self.frametype = GRID
+        elif element.tag == PLACE:
+            self.layoutargs = self.extractPlaceargs(element)
+            self.frametype = PLACE
+        else:
+            raise(Exception("Invalid Layout Tag: {}".format(element.tag)))
+
+    def extractPackargs(self, elem):
+        packelem = elem.find(PACK)
+        if packelem is not None:
+            packargs = xlateArgs(self, packelem.attrib)
+            elem.remove(packelem)
+            return packargs
+
+    def extractGridargs(self, elem):
+        gridelem = elem.find(GRID)
+        if gridelem is not None:
+            gridargs = xlateArgs(self, gridelem.attrib)
+            elem.remove(gridelem)
+            return gridargs
+
+    def extractPlaceargs(self, elem):
+        placeelem = elem.find(PLACE)
+        if placeelem is not None:
+            placeargs = xlateArgs(self, placeelem.attrib)
+            elem.remove(placeelem)
+            return placeargs
+
+
+
+
+    def emitPackargs(self,  widgetelem, packargs):
+        pad = (stacklevel * '\t')
+        print(pad + "{}.pack({})".format(widgetelem.tag, packargs))
+
+    def emitGridargs(self, widgetelem, gridargs):
+        pad = (stacklevel * '\t')
+        print(pad + "{}.grid({})".format(widgetelem.tag, gridargs))
+
+    def emitPlaceargs(self, widgetelem, placeargs):
+        pad = (stacklevel * '\t')
+        print(pad + "{}.placeargs({})".format(widgetelem.tag, placeargs))
+
+    def emitFrame(self,widgetname, master, *args, **kwargs):
+        try:
+            mastername = master.widgetName
+        except:
+            mastername = master.__class__.__name__
+
+        pad = (stacklevel * '\t')
+        #outputstr="{}({},{},{})".format(widgetname,mastername, args, kwargs)
+        outputstr = "{}({}".format(widgetname, mastername)
+        if len(args) > 0:
+            outputstr += ", {}".format(args)
+
+        if len(kwargs) > 0:
+            outputstr += ", {}".format(str(kwargs)[1:-1].replace(': ','='))
+
+        outputstr += ")"
+
+        print(pad + outputstr,file=self.outputfp)
 
 
 class GUI_MakerMixin(object):
@@ -112,6 +268,7 @@ class GUI_MakerMixin(object):
            self.outputfp = open(outputfilename,'w')
 
         self.emit("Hello World")
+
 
     def makeCommand(self, fnName, arg=None):
         """
@@ -135,32 +292,6 @@ class GUI_MakerMixin(object):
                 setattr(f, '__name__', fnName)
                 return f
 
-    def xlateArgs(self,kwargs):
-        for key in kwargs:
-            if key != COMMAND and key != ONCLICK:
-                try:
-                    val = GetAttr(self, kwargs[key])
-                    kwargs[key] = val
-                except:
-                    try:
-                        val = GetAttr(mGraphicsLibName, kwargs[key])
-                        kwargs[key] = val
-                    except:
-                        if '+' in kwargs[key]:
-                            try:
-                                tmp = kwargs[key].split('+')
-                                val=""
-                                for v in tmp:
-                                    val += GetAttr(mGraphicsLibName, v)
-
-                                kwargs[key] = val
-                            except:
-                                pass
-
-                        else:
-                            pass
-
-        return kwargs
 
     def parseXMLFile(self, xmlfile):
         tree = ET.parse(xmlfile)
@@ -223,16 +354,23 @@ class GUI_MakerMixin(object):
     def extractPackargs(self, elem):
         packelem = elem.find(PACK)
         if packelem is not None:
-            packargs = self.xlateArgs(packelem.attrib)
+            packargs = xlateArgs(self, packelem.attrib)
             elem.remove(packelem)
             return packargs
 
     def extractGridargs(self, elem):
         gridelem = elem.find(GRID)
         if gridelem is not None:
-            gridargs = self.xlateArgs(gridelem.attrib)
+            gridargs = xlateArgs(self, gridelem.attrib)
             elem.remove(gridelem)
             return gridargs
+
+    def extractPlaceargs(self, elem):
+        placeelem = elem.find(PLACE)
+        if placeelem is not None:
+            placeargs = xlateArgs(self, placeelem.attrib)
+            elem.remove(placeelem)
+            return placeargs
 
     def emitPackargs(self,  widgetelem, packargs):
         pad = (stacklevel * '\t')
@@ -241,6 +379,10 @@ class GUI_MakerMixin(object):
     def emitGridargs(self, widgetelem, gridargs):
         pad = (stacklevel * '\t')
         print(pad + "{}.grid({})".format(widgetelem.tag, gridargs))
+
+    def emitPlaceargs(self, widgetelem, placeargs):
+        pad = (stacklevel * '\t')
+        print(pad + "{}.placeargs({})".format(widgetelem.tag, placeargs))
 
     def emitFrame(self,widgetname, master, *args, **kwargs):
         try:
@@ -312,12 +454,16 @@ class GUI_MakerMixin(object):
         if packargs is None:
             gridargs = self.extractGridargs(subelement)
 
+        placeargs = None
+        if gridargs is None:
+            placeargs = self.extractPlaceargs(subelement)
+
         widget = self.processXmlElement(frame, subelement)
 
         if subelement.tag == FORM or subelement.tag == INCLUDE or subelement.tag == REPGROUP:
             subelement.tag = FRAME.capitalize()
 
-        if packargs is None and gridargs is None and widget is not None:
+        if packargs is None and gridargs is None and placeargs is None and widget is not None:
             self.emitPackargs(subelement, '')
             widget.pack()
         elif packargs is not None and widget is not None:
@@ -326,17 +472,24 @@ class GUI_MakerMixin(object):
         elif gridargs is not None and widget is not None:
             self.emitGridargs(subelement, gridargs)
             widget.grid(**gridargs)
+        elif placeargs is not None and widget is not None:
+            self.emitPlaceargs(subelement, placeargs)
+            widget.place(**placeargs)
 
 
 
     def processForm(self, master, element):
-        frameoptions = self.xlateArgs(element.attrib)
+        frameoptions = xlateArgs(self, element.attrib)
         frame = self.createFrame(master, **frameoptions)
         framepackargs = self.extractPackargs(element)
 
         framegridargs = None
         if framepackargs is None:
             framegridargs = self.extractGridargs(element)
+
+        frameplaceargs = None
+        if framegridargs is None:
+            frameplaceargs = self.extractPlaceargs(element)
 
         packargs = None
 
@@ -348,16 +501,19 @@ class GUI_MakerMixin(object):
 
         element.tag = 'Frame'
         popFrame()
-        if framepackargs is None and framegridargs is None:
+        if framepackargs is None and framegridargs is None and frameplaceargs is None:
             #self.emit("frame.pack()")
             self.emitPackargs(element, '')
             frame.pack()
         elif framepackargs is not None:
-            self.emitPackargs(element, packargs)
+            self.emitPackargs(element, framepackargs)
             frame.pack(**framepackargs)
         elif framegridargs is not None:
             self.emitGridargs(element, framegridargs)
             frame.grid(**framegridargs)
+        elif frameplaceargs is not None:
+            self.emitGridargs(element, frameplaceargs)
+            frame.grid(**frameplaceargs)
 
 
         return frame
@@ -397,7 +553,11 @@ class GUI_MakerMixin(object):
         if framepackargs is None:
             framegridargs = self.extractGridargs(element)
 
-        options = self.xlateArgs(element.attrib)
+        frameplaceargs = None
+        if framegridargs is None:
+            frameplaceargs = self.extractPlaceargs(element)
+
+        options = xlateArgs(self, element.attrib)
         frame = self.createFrame(master, **options)
 
         cblist = element.findall(CHECKBUTTON)
@@ -439,7 +599,7 @@ class GUI_MakerMixin(object):
 
         element.tag = 'Frame'
         popFrame()
-        if framepackargs is None and framegridargs is None:
+        if framepackargs is None and framegridargs is None and frameplaceargs is None:
             self.emitPackargs(element, '')
             frame.pack()
         elif framepackargs is not None:
@@ -448,20 +608,48 @@ class GUI_MakerMixin(object):
         elif framegridargs is not None:
             self.emitGridargs(element, framegridargs)
             frame.grid(**framegridargs)
+        elif frameplaceargs is not None:
+            self.emitGridargs(element, frameplaceargs)
+            frame.grid(**frameplaceargs)
 
 
         return frame
 
     def processEntryOptions(self, element, options):
         textvar = element.find(VARIABLE)
+        if textvar is None:
+            textvar = element.find(TEXTVARIABLE)
+
         if textvar is not None and NAME in textvar.attrib:
             varfunc = GetAttr(mGraphicsLibName, textvar.attrib[TYPEVAR])()
             varname = textvar.attrib[NAME]
             self.createAttr(varname, varfunc)
             options[TEXTVARIABLE] = varfunc
+
+            if VALUE in textvar.attrib:
+                value = textvar.attrib[VALUE]
+                varfunc.set(value)
+
             element.remove(textvar)
             # index = element._children.index(textvar)
             # del(element._children[index])
+
+        if element.tag == LABEL:
+            lblname = None
+            if NAME in options:
+                lblname = options[NAME]
+            if PHOTOIMAGE in options:
+                imageFile = options[PHOTOIMAGE]
+                rotation = 0
+                if ROTATION in options:
+                    rotation = int(options[ROTATION])
+                    del options[ROTATION]
+                photoimage = createPhotoImage(imageFile, defaultimage=r"TV.jpg", angle=rotation)
+                options[IMAGE] = photoimage
+                del options[PHOTOIMAGE]
+                if lblname is not None:
+                    self.createAttr(lblname + "PhotoImage", photoimage)
+
 
         return options
 
@@ -492,8 +680,9 @@ class GUI_MakerMixin(object):
 
             self.createAttr(varname, varfunc)
             options[VARIABLE] = varfunc
-            index = element._children.index(optvar)
-            del (element._children[index])
+            try:
+                element.remove(optvar)
+            except: pass
 
         return options
 
@@ -579,6 +768,8 @@ class GUI_MakerMixin(object):
             if options[NOARG].lower() == 'true':
                 noarg = True
 
+            del options[NOARG]
+
         if noarg:
             return None
         else:
@@ -586,15 +777,33 @@ class GUI_MakerMixin(object):
 
 
     def processButtonOptions(self, element, options):
+        btnName = None
+        icon = None
+
         if TEXT in options:
             btnName = options[TEXT]
 
+        if NAME in options:
+            btnName = options[NAME]
+
+        try:
+            imageFile = options[IMAGE]
+            icon = createIcon(imageFile)
+            options[IMAGE] = icon
+        except:
+            pass
+
+        if btnName is not None:
             if COMMAND in options and isinstance(options[COMMAND], str):
                 options[COMMAND] = self.makeCommand(options[COMMAND], self.processNoArg(options, btnName))
 
             elif ONCLICK in options:
                 options[COMMAND] = self.makeCommand(options[ONCLICK], self.processNoArg(options, btnName))
                 del (options[ONCLICK])
+
+            if icon is not None:
+                self.createAttr(btnName + "Icon", icon)
+
 
         return options
 
@@ -663,6 +872,12 @@ class GUI_MakerMixin(object):
         else:
             data = None
 
+        if VARNAMES in element.attrib:
+            varnames = element.get(VARNAMES)
+            del (element.attrib[VARNAMES])
+        else:
+            varnames = None
+
         if UNIQUEFRAME in element.attrib:
             uniqueframe = element.get(UNIQUEFRAME).lower() == "true"
             del(element.attrib[UNIQUEFRAME])
@@ -675,8 +890,11 @@ class GUI_MakerMixin(object):
         else:
             raise Exception("repgroup tag missing tags and/or data atrributes")
 
+        if varnames is not None:
+            varnames = extractRgAttribsDict(varnames)
 
-        options = self.xlateArgs(element.attrib)
+
+        options = xlateArgs(self, element.attrib)
         # options = element.attrib
 
         frame = None
@@ -685,7 +903,7 @@ class GUI_MakerMixin(object):
             pushFrame()
             frame = self.createFrame(master, **options)
 
-        numDataItems = len(data.values()[0])
+        numDataItems = len(list(data.values())[0])
         for n in range(numDataItems):
             if not uniqueframe:
                 frame = self.createFrame(master, **options)
@@ -695,6 +913,13 @@ class GUI_MakerMixin(object):
                 try:
                     attribName = rgAttribs[subelem.tag]
                     subelem.attrib[attribName] = data[subelem.tag].pop(0)
+                    gridelem = subelem.find(GRID)
+                    if gridelem is not None:
+                        if COLUMN in gridelem.attrib:
+                            gridelem.attrib[ROW] = str(n)
+                        elif ROW in gridelem.attrib:
+                            gridelem.attrib[COLUMN] = str(n)
+
                     if subelem.tag == ENTRY:
                         txtvar = subelem.find(VARIABLE)
                         if txtvar is not None:
@@ -716,8 +941,16 @@ class GUI_MakerMixin(object):
                     self.emitPackargs(subelem, copy.copy(framepackargs))
                     frame.pack(**framepackargs)
                 elif framegridargs is not None:
-                    self.emitPackargs(subelem, copy.copy(framegridargs))
-                    frame.grid(**framegridargs)
+                    framegridargs2 = copy.copy(framegridargs)
+                    if COLUMN in framegridargs2:
+                        framegridargs2[ROW] = n
+                    elif ROW in framegridargs2:
+                        framegridargs2[COLUMN] = n
+                    else:
+                        framegridargs2 = framegridargs
+
+                    self.emitPackargs(subelem, framegridargs2)
+                    frame.grid(**framegridargs2)
 
 
         if uniqueframe:
@@ -733,8 +966,8 @@ class GUI_MakerMixin(object):
                 self.emitPackargs(subelem, copy.copy(framegridargs))
                 frame.grid(**framegridargs)
 
-            popFrame()
-            return frame
+        # popFrame()
+        return frame
 
 
     def processXmlElement(self, master, element):
@@ -751,15 +984,20 @@ class GUI_MakerMixin(object):
             return self.processRepGroupTag(master, element)
 
         else:
-            options = self.xlateArgs(element.attrib)
+            options = xlateArgs(self, element.attrib)
             packargs = None
             gridargs = None
+            placeargs = None
+            varname = None
 
             if len(element) or element.tag in SPECIALTAGS:
                 if element.tag == BUTTON:
                     options = self.processButtonOptions(element, options)
+                    if NAME in options:
+                        varname = options[NAME]
+                        del(options[NAME])
 
-                elif element.tag == ENTRY:
+                elif element.tag == ENTRY or element.tag == LABEL:
                     options = self.processEntryOptions(element, options)
 
                 elif element.tag == CHECKBUTTON:
@@ -771,95 +1009,144 @@ class GUI_MakerMixin(object):
                 elif element.tag == SCALE:
                     options = self.processScaleOptions(element, options)
 
-                elif element.tag == VARIABLE:
+                elif element.tag == VARIABLE or element.tag == TEXTVARIABLE:
                     options = self.processVariableTagOptions(element, options)
                     return
+
+                elif element.tag == CONFIGURE:
+                    obj = element.attrib[OBJ]
+                    obj.configure(command = element.attrib[COMMAND])
+                    fnname = ""
+                    tmp = str(element.attrib[COMMAND])
+                    pos1 = tmp.find('.')
+                    pos2 = tmp[pos1:].find(' ')
+                    pos3 = tmp.rfind('!')
+                    if pos1 > 0 and pos2 > 0 and pos3 > 0:
+                        fnname = tmp[pos3+1:-2] + "." + tmp[pos1+1:pos2 + pos1]
+
+                    self.emit(obj._name[1:] + ".configure(" + fnname + ")")
+                    return
+
 
                 for subelement in element:
                     if subelement.tag == PACK:
                         packargs = self.extractPackargs(subelement)
                     elif subelement.tag == GRID:
                         gridargs = self.extractGridargs(subelement)
+                    elif subelement.tag == PLACE:
+                        placeargs = self.extractPlaceargs(subelement)
                     else:
-                        options[subelement.tag] = subelement.text
+                        if subelement.text is not None:
+                            options[subelement.tag] = subelement.text
+
                         if COMMAND in options and TEXT in options and isinstance(options[COMMAND], str):
                             options[COMMAND] = self.makeCommand(options[COMMAND], self.processNoArg(options, options[TEXT]))
 
             widgetName = element.tag.capitalize()
             widget_factory = GetAttr(mGraphicsLibName, widgetName)
 
+            if NAME in options:
+                varname = options[NAME]
+                del options[NAME]
 
-            if packargs is None and gridargs is None:
+            if packargs is None and gridargs is None and placeargs is None:
                 self.emitWidget(widgetName, master, copy.copy(options))
-                return widget_factory(master, **options)
+                widget = widget_factory(master, **options)
+
+                if varname is not None:
+                    self.createAttr(varname, widget)
+
+                return widget
+
             elif packargs is not None:
                 self.emitWidget(widgetName, master, copy.copy(options), copy.copy(packargs))
-                widget_factory(master, **options).pack(**packargs)
+                widget = widget_factory(master, **options).pack(**packargs)
+
+                if varname is not None:
+                    self.createAttr(varname, widget)
+
+                return widget
+
             elif gridargs is not None:
                 self.emitWidget(widgetName, master, copy.copy(options), copy.copy(gridargs))
-                widget_factory(master, **options).grid(**gridargs)
+                widget = widget_factory(master, **options).grid(**gridargs)
+
+                if varname is not None:
+                    self.createAttr(varname, widget)
+
+                return widget
+
+            elif placeargs is not None:
+                self.emitWidget(widgetName, master, copy.copy(options), copy.copy(placeargs))
+                widget = widget_factory(master, **options).grid(**placeargs)
+
+                if varname is not None:
+                    self.createAttr(varname, widget)
+
+                return widget
 
 
 
 
+#
 class TkGUI_MakerMixin(GUI_MakerMixin):
     def __init__(self, topLevelWindow=None, outputfilename=None):
-        super(GUI_MakerMixin, self).__init__(topLevelWindow=topLevelWindow, outputfilename=outputfilename)
+        super().__init__(topLevelWindow=topLevelWindow, outputfilename=outputfilename)
 
-class Test(TkGUI_MakerMixin):
-    def __init__(self, topLevelWindow=None, outputfilename=None):
-        super(TkGUI_MakerMixin, self).__init__(topLevelWindow=topLevelWindow, outputfilename=outputfilename)
+# class Test(TkGUI_MakerMixin):
+#     def __init__(self, topLevelWindow=None, outputfilename=None):
+#         super(TkGUI_MakerMixin, self).__init__(topLevelWindow=topLevelWindow, outputfilename=outputfilename)
+#
+#     def noop(self, *arg):
+#         """
+#         Sample onclick handler
+#         :param arg:
+#         :return:
+#         """
+#         if len(arg) == 1:
+#             if type(arg) == tuple:
+#                 try:
+#                     myarg = GetAttr(self, arg[0])
+#                 except:
+#                     myarg = arg[0]
+#
+#                 try:
+#                     if isinstance(myarg, StringVarPlus) or isinstance(myarg, mGraphicsLibName.IntVar):
+#                         # myarg = myarg.get()
+#                         print("noop called: %s:%s" % (arg[0],myarg.get()))
+#                         return
+#                 except:
+#                     pass
+#             else:
+#                 myarg = arg
+#         else:
+#             myarg = arg[0]
+#             print("noop called: %s:%s:%s" % (myarg, arg[1], GetAttr(self, myarg).get()))
+#             return
+#         print("noop called: %s" % myarg)
+#
+#
+#     def quit(self, *arg):
+#         """
+#         Sample onclick handler
+#         :param arg:
+#         :return:
+#         """
+#         exit()
+#
+#
+#     def fetch(self, arg):
+#         data={'Name':self.n1.get(),'Job':self.j1.get(), 'Pay':self.p1.get()}
+#         for label in data:
+#             value =data[label]
+#             print("%s:%s" % (label, value))
 
-    def noop(self, *arg):
-        """
-        Sample onclick handler
-        :param arg:
-        :return:
-        """
-        if len(arg) == 1:
-            if type(arg) == tuple:
-                try:
-                    myarg = GetAttr(self, arg[0])
-                except:
-                    myarg = arg[0]
-
-                try:
-                    if isinstance(myarg, StringVarPlus) or isinstance(myarg, mGraphicsLibName.IntVar):
-                        # myarg = myarg.get()
-                        print("noop called: %s:%s" % (arg[0],myarg.get()))
-                        return
-                except:
-                    pass
-            else:
-                myarg = arg
-        else:
-            myarg = arg[0]
-            print("noop called: %s:%s:%s" % (myarg, arg[1], GetAttr(self, myarg).get()))
-            return
-        print("noop called: %s" % myarg)
-
-
-    def quit(self, *arg):
-        """
-        Sample onclick handler
-        :param arg:
-        :return:
-        """
-        exit()
-
-
-    def fetch(self, arg):
-        data={'Name':self.n1.get(),'Job':self.j1.get(), 'Pay':self.p1.get()}
-        for label in data:
-            value =data[label]
-            print("%s:%s" % (label, value))
-
-if __name__ == '__main__':
-    root = mRootWindow()
-    root.geometry("230x200")
-
-    m1 = Test(root)
-    fr = m1.makeGUI(root, "gui10.xml")
-    fr.pack()
-
-    root.mainloop()
+# if __name__ == '__main__':
+#     root = mRootWindow()
+#     root.geometry("660x360")
+#
+#     m1 = Test(root)
+#     fr = m1.makeGUI(root, "gui11.xml")
+#     fr.pack()
+#
+#     root.mainloop()
