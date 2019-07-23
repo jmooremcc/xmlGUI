@@ -67,6 +67,7 @@ NOARG = 'noarg'
 
 stack = []
 stacklevel = 0
+outputfp = sys.stdout
 
 def pushFrame():
     global stacklevel
@@ -155,38 +156,42 @@ def xlateArgs(parent,kwargs):
     return kwargs
 
 
-class generateFrame():
-    def __init__(self, parent, element=None, frametype=PACK, frameargs=None, framekwargs=None):
+class GenerateFrame():
+    def __init__(self, parent, element=None, frametype=PACK, frameargs={}, **framekwargs):
         self.parent = parent
-        self.frame = None
-        self.layoutargs = None
-
+        self.layoutargs = {}
         self.frametype = frametype
-        self.frameargs = frameargs
-        self.framekwargs = framekwargs
 
-        if element is not None:
+        if element is None:
+            options = xlateArgs(self, framekwargs)
+        else:
             self.processElement(element)
+            options = xlateArgs(self, element.attrib)
 
-        options = xlateArgs(self, element.attrib)
         self.frame = Frame(parent, **options)
+        self.emitFrame(FRAME.capitalize(), parent, **options)
+        pushFrame()
 
 
     @property
     def Frame(self):
         return self.frame
 
-    def closeFrame(self):
+    def layoutFrame(self, **kwargs):
+        popFrame()
+        if len(kwargs)> 0:
+            self.layoutargs = kwargs
         if self.frametype == PACK:
             self.frame.pack(self.layoutargs)
+            self.emitPackargs(FRAME.capitalize(), self.layoutargs)
         elif self.frametype == GRID:
             self.frame.grid(self.layoutargs)
+            self.emitGridargs(FRAME.capitalize(), self.layoutargs)
         elif self.frametype == PLACE:
             self.frame.place(self.layoutargs)
+            self.emitPlaceargs(FRAME.capitalize(), self.layoutargs)
 
     def processElement(self, element):
-        self.framekwargs = None
-
         if element.tag == PACK:
             self.layoutargs = self.extractPackargs(element)
             self.frametype = PACK
@@ -220,22 +225,23 @@ class generateFrame():
             elem.remove(placeelem)
             return placeargs
 
-
-
-
-    def emitPackargs(self,  widgetelem, packargs):
+    @staticmethod
+    def emitPackargs(widgetTag, packargs):
         pad = (stacklevel * '\t')
-        print(pad + "{}.pack({})".format(widgetelem.tag, packargs))
+        print(pad + "{}.pack({})".format(widgetTag, packargs))
 
-    def emitGridargs(self, widgetelem, gridargs):
+    @staticmethod
+    def emitGridargs(widgetTag, gridargs):
         pad = (stacklevel * '\t')
-        print(pad + "{}.grid({})".format(widgetelem.tag, gridargs))
+        print(pad + "{}.grid({})".format(widgetTag, gridargs))
 
-    def emitPlaceargs(self, widgetelem, placeargs):
+    @staticmethod
+    def emitPlaceargs(widgetTag, placeargs):
         pad = (stacklevel * '\t')
-        print(pad + "{}.placeargs({})".format(widgetelem.tag, placeargs))
+        print(pad + "{}.placeargs({})".format(widgetTag, placeargs))
 
-    def emitFrame(self,widgetname, master, *args, **kwargs):
+    @staticmethod
+    def emitFrame(widgetname, master, *args, **kwargs):
         try:
             mastername = master.widgetName
         except:
@@ -252,20 +258,22 @@ class generateFrame():
 
         outputstr += ")"
 
-        print(pad + outputstr,file=self.outputfp)
+        print(pad + outputstr,file= outputfp)
 
 
 class GUI_MakerMixin(object):
     def __init__(self, topLevelWindow=None, outputfilename=None):
+        global outputfp
+
         if topLevelWindow is None:
             self.topLevelWindow = mRootWindow()
         else:
             self.topLevelWindow = topLevelWindow
 
-        self.outputfp = sys.stdout
+        outputfp = sys.stdout
         if outputfilename is not None:
-            #self.outputfp=sys.stdout
-           self.outputfp = open(outputfilename,'w')
+            #outputfp =sys.stdout
+           outputfp = open(outputfilename,'w')
 
         self.emit("Hello World")
 
@@ -306,8 +314,8 @@ class GUI_MakerMixin(object):
 
         #self.emitPackargs(element, '')
 
-        if self.outputfp is not None and self.outputfp != sys.stdout:
-            self.outputfp.close()
+        if outputfp is not None and outputfp != sys.stdout:
+            outputfp .close()
 
         return frame
 
@@ -401,7 +409,7 @@ class GUI_MakerMixin(object):
 
         outputstr += ")"
 
-        print(pad + outputstr,file=self.outputfp)
+        print(pad + outputstr,file=outputfp )
 
     def adjustWidgetArgs(self, args):
         args = args[0]
@@ -433,15 +441,15 @@ class GUI_MakerMixin(object):
             outputstr="{}({})".format(widgetname,mastername)
 
         pad = (stacklevel * '\t')
-        print(pad + outputstr,file=self.outputfp,**kwargs)
+        print(pad + outputstr,file=outputfp ,**kwargs)
 
     def emit(self, *args, **kwargs):
         pad = (stacklevel * '\t')
-        print(pad, *args, file=self.outputfp, **kwargs)
+        print(pad, *args, file=outputfp , **kwargs)
 
     def createFrame(self, master, *args, **kwargs):
         #str = (stacklevel * '\t') + "Frame"
-        self.emitFrame("Frame",master, *args, **kwargs)
+        self.emitFrame(FRAME.capitalize(),master, *args, **kwargs)
         pushFrame()
         return mFrame(master, *args, **kwargs)
 
@@ -1141,12 +1149,18 @@ class TkGUI_MakerMixin(GUI_MakerMixin):
 #             value =data[label]
 #             print("%s:%s" % (label, value))
 
-# if __name__ == '__main__':
-#     root = mRootWindow()
-#     root.geometry("660x360")
-#
-#     m1 = Test(root)
-#     fr = m1.makeGUI(root, "gui11.xml")
-#     fr.pack()
-#
-#     root.mainloop()
+if __name__ == '__main__':
+    root = mRootWindow()
+    root.geometry("660x360")
+
+    # m1 = Test(root)
+    # fr = m1.makeGUI(root, "gui11.xml")
+    fr = GenerateFrame(root, width="10", bg="green", bd="4")
+    # fr = Frame(root, width=10, bg="green", bd=2)
+    Label(fr.Frame, text="Hello World", bg="yellow").pack(side=TOP, expand=1, fill=X)
+    Label(fr.Frame, text="Now is the time", bg="white", fg="blue").pack(side=TOP, expand=1)
+    # fr.layoutargs={"side":BOTTOM, "expand":1}
+    fr.layoutFrame(side=BOTTOM, expand=1)
+    # fr.Frame.pack(side=TOP, fill=X, expand=1)
+    # fr.pack(expand=1, fill=Y, side=TOP)
+    root.mainloop()
