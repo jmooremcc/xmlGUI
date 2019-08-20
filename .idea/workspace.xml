@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="a9943a7d-7bec-4fdf-b35d-516e265cbef8" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/MenuMakerMixin.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/MenuMakerMixin.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="a9943a7d-7bec-4fdf-b35d-516e265cbef8" name="Default" comment="Major revision to processing engine in GUI_Maker&#10;Group types are now self-sufficient in that they create their own frame object&#10;A GenerateFrame class has been created to consistently handle Frame operations&#10;The way elements are processed is now more uniform">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/GUI_MakerMixin.py" beforeDir="false" afterPath="$PROJECT_DIR$/GUI_MakerMixin.py" afterDir="false" />
     </list>
@@ -129,6 +127,14 @@
       <option name="presentableId" value="Default" />
       <updated>1524404699314</updated>
     </task>
+    <task id="LOCAL-00001" summary="Major revision to processing engine in GUI_Maker&#10;Group types are now self-sufficient in that they create their own frame object&#10;A GenerateFrame class has been created to consistently handle Frame operations&#10;The way elements are processed is now more uniform">
+      <created>1566233323840</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1566233323841</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -148,6 +154,8 @@
     <ignored-roots>
       <path value="$PROJECT_DIR$" />
     </ignored-roots>
+    <MESSAGE value="Major revision to processing engine in GUI_Maker&#10;Group types are now self-sufficient in that they create their own frame object&#10;A GenerateFrame class has been created to consistently handle Frame operations&#10;The way elements are processed is now more uniform" />
+    <option name="LAST_COMMIT_MESSAGE" value="Major revision to processing engine in GUI_Maker&#10;Group types are now self-sufficient in that they create their own frame object&#10;A GenerateFrame class has been created to consistently handle Frame operations&#10;The way elements are processed is now more uniform" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -189,40 +197,51 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
-          <line>882</line>
+          <line>833</line>
           <option name="timeStamp" value="24" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
-          <line>876</line>
+          <line>827</line>
           <option name="timeStamp" value="28" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
-          <line>906</line>
+          <line>859</line>
           <option name="timeStamp" value="29" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
-          <line>928</line>
-          <option name="timeStamp" value="30" />
+          <line>276</line>
+          <option name="timeStamp" value="37" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
-          <line>974</line>
-          <option name="timeStamp" value="32" />
+          <line>706</line>
+          <option name="timeStamp" value="42" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
+          <line>722</line>
+          <option name="timeStamp" value="43" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
+          <line>768</line>
+          <option name="timeStamp" value="44" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
+          <line>929</line>
+          <option name="timeStamp" value="45" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
+          <line>279</line>
+          <option name="timeStamp" value="46" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
-  </component>
-  <component name="debuggerHistoryManager">
-    <expressions id="evaluateExpression">
-      <expression>
-        <expression-string>len(child.items())</expression-string>
-        <language-id>Python</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-    </expressions>
   </component>
   <component name="masterDetails">
     <states>

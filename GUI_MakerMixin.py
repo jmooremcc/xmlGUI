@@ -224,12 +224,36 @@ def emit(*args, **kwargs):
     pad = (stacklevel * '\t')
     print(pad, *args, file=outputfp , **kwargs)
 
+def emitFrame(widgetname, master, *args, **kwargs):
+    try:
+        mastername = master.widgetName
+    except:
+        mastername = master.__class__.__name__
 
-class LayoutProcessor():
-    def __init__(self, element):
+    pad = (stacklevel * '\t')
+    #outputstr="{}({},{},{})".format(widgetname,mastername, args, kwargs)
+    outputstr = "{}({}".format(widgetname, mastername)
+    if len(args) > 0:
+        outputstr += ", {}".format(args)
+
+    if len(kwargs) > 0:
+        outputstr += ", {}".format(str(kwargs)[1:-1].replace(': ','='))
+
+    outputstr += ")"
+
+    print(pad + outputstr,file= outputfp)
+
+class LayoutManager():
+    def __init__(self, element, parent = None, elementName=None):
         self.element = element
         self.gridargs = None
         self.placeargs = None
+        self.packargs = None
+        self.elementName = elementName
+        self.parent = parent
+
+        if element is None:
+            return
 
         self.packargs = extractPackargs(self, element)
 
@@ -241,11 +265,24 @@ class LayoutProcessor():
 
 
     def applyLayoutToWidget(self, widget):
+        if self.element is None:
+            emit(FRAME.capitalize(), '')
+            widget.pack()
+            return
+
         if self.element.tag == FORM or self.element.tag == INCLUDE or self.element.tag == REPGROUP:
-            self.element.tag = FRAME.capitalize()
+            self.element.tag = self.elementName
 
         if self.packargs is None and self.gridargs is None and self.placeargs is None and widget is None:
             emitPackargs(self.element, '')
+            widget.pack()
+        elif self.packargs is None and self.gridargs is None and self.placeargs is None and widget is not None:
+            if self.elementName is None:
+                emit(FRAME.capitalize())
+            else:
+                self.element.tag = self.element.tag.capitalize()
+                emitPackargs(self.element, '')
+
             widget.pack()
         elif self.packargs is not None and widget is not None:
             emitPackargs(self.element, self.packargs)
@@ -257,22 +294,22 @@ class LayoutProcessor():
             emitPlaceargs(self.element, self.placeargs)
             widget.place(**self.placeargs)
 
+
 class GenerateFrame():
     def __init__(self, parent, element=None, frametype=PACK, frameargs={}, **framekwargs):
         self.parent = parent
-        self.layoutargs = {}
         self.frametype = frametype
         self.elementName = FRAME.capitalize()
 
         if element is None:
             options = xlateArgs(self, framekwargs)
         else:
+            self.elementName = "{}{}".format(element.tag.capitalize(), FRAME.capitalize())
             self.processElement(element)
             self.options = options = xlateArgs(self, element.attrib)
-            self.elementName = "{}{}".format(element.tag.capitalize(), FRAME.capitalize())
 
         self.frame = Frame(parent, **options)
-        self.emitFrame(self.elementName, parent, **options)
+        emitFrame(self.elementName, parent, **options)
         pushFrame()
 
 
@@ -283,114 +320,17 @@ class GenerateFrame():
     def clone(self):
         newfr = copy.copy(self)
         newfr.frame = Frame(self.frame, **self.options)
-        self.emitFrame(self.elementName, self.parent, **self.options)
+        emitFrame(self.elementName, self.parent, **self.options)
         pushFrame()
         return newfr
 
     def layoutFrame(self, **kwargs):
         popFrame()
-        if len(kwargs)> 0:
-            self.layoutargs = kwargs
-
-        if self.frametype == PACK:
-            self.frame.pack(self.layoutargs)
-            self.emitPackargs(self.elementName, self.layoutargs)
-        elif self.frametype == GRID:
-            self.frame.grid(self.layoutargs)
-            self.emitGridargs(self.elementName, self.layoutargs)
-        elif self.frametype == PLACE:
-            self.frame.place(self.layoutargs)
-            self.emitPlaceargs(self.elementName, self.layoutargs)
-
-    def findLayoutTag(self, element):
-        elem = element.find(PACK)
-        if elem is not None:
-            return elem
-
-        elem = element.find(GRID)
-        if elem is not None:
-            return elem
-
-        elem = element.find(PLACE)
-        if elem is not None:
-            return elem
-
-        return None
+        self.layout.applyLayoutToWidget(self.frame)
 
     def processElement(self, element):
-        elem = self.findLayoutTag(element)
-        if elem is None:
-            return
+        self.layout = LayoutManager(element, parent=self.parent, elementName=self.elementName)
 
-        if elem.tag == PACK:
-            self.layoutargs = self.extractPackargs(element)
-            self.frametype = PACK
-        elif elem.tag == GRID:
-            self.layoutargs = self.extractGridargs(element)
-            self.frametype = GRID
-        elif elem.tag == PLACE:
-            self.layoutargs = self.extractPlaceargs(element)
-            self.frametype = PLACE
-        # else:
-            # raise(Exception("Invalid Layout Tag: {}".format(element.tag)))
-
-    def extractPackargs(self, elem):
-        packelem = elem.find(PACK)
-        if packelem is not None:
-            packargs = xlateArgs(self, packelem.attrib)
-            elem.remove(packelem)
-            return packargs
-
-    def extractGridargs(self, elem):
-        gridelem = elem.find(GRID)
-        if gridelem is not None:
-            gridargs = xlateArgs(self, gridelem.attrib)
-            elem.remove(gridelem)
-            return gridargs
-
-    def extractPlaceargs(self, elem):
-        placeelem = elem.find(PLACE)
-        if placeelem is not None:
-            placeargs = xlateArgs(self, placeelem.attrib)
-            elem.remove(placeelem)
-            return placeargs
-
-    @staticmethod
-    def emitPackargs(widgetTag, packargs):
-        if len(packargs) == 0:
-            packargs = ""
-        pad = (stacklevel * '\t')
-        print(pad + "{}.pack({})".format(widgetTag, packargs))
-
-    @staticmethod
-    def emitGridargs(widgetTag, gridargs):
-        pad = (stacklevel * '\t')
-        print(pad + "{}.grid({})".format(widgetTag, gridargs))
-
-    @staticmethod
-    def emitPlaceargs(widgetTag, placeargs):
-        pad = (stacklevel * '\t')
-        print(pad + "{}.placeargs({})".format(widgetTag, placeargs))
-
-    @staticmethod
-    def emitFrame(widgetname, master, *args, **kwargs):
-        try:
-            mastername = master.widgetName
-        except:
-            mastername = master.__class__.__name__
-
-        pad = (stacklevel * '\t')
-        #outputstr="{}({},{},{})".format(widgetname,mastername, args, kwargs)
-        outputstr = "{}({}".format(widgetname, mastername)
-        if len(args) > 0:
-            outputstr += ", {}".format(args)
-
-        if len(kwargs) > 0:
-            outputstr += ", {}".format(str(kwargs)[1:-1].replace(': ','='))
-
-        outputstr += ")"
-
-        print(pad + outputstr,file= outputfp)
 
 
 class GUI_MakerMixin(object):
@@ -509,7 +449,7 @@ class GUI_MakerMixin(object):
 
     def createFrame(self, master, *args, **kwargs):
         #str = (stacklevel * '\t') + "Frame"
-        self.emitFrame(FRAME.capitalize(),master, *args, **kwargs)
+        emitFrame(FRAME.capitalize(),master, *args, **kwargs)
         pushFrame()
         return mFrame(master, *args, **kwargs)
 
@@ -743,7 +683,7 @@ class GUI_MakerMixin(object):
         if FILENAME in elem.attrib:
             filename = elem.attrib[FILENAME]
             elem = self.parseXMLFile(filename)
-            # self.emitFrame(FRAME.capitalize(), parent)
+            # emitFrame(FRAME.capitalize(), parent)
             # pushFrame()
             val = self.processXmlElement(parent, elem)
             # popFrame()
@@ -787,6 +727,17 @@ class GUI_MakerMixin(object):
             elif ONCLICK in options:
                 options[COMMAND] = self.makeCommand(options[ONCLICK], self.processNoArg(options, btnName))
                 del (options[ONCLICK])
+        elif len(options) > 0:
+            tmp = element.find(TEXT)
+            if tmp is not None:
+                btnName = tmp.text
+
+                if COMMAND in options:
+                    options[COMMAND] = self.makeCommand(options[COMMAND], self.processNoArg(options, btnName))
+                elif ONCLICK in options:
+                    options[COMMAND] = self.makeCommand(options[ONCLICK], self.processNoArg(options, btnName))
+                    del (options[ONCLICK])
+
 
             if icon is not None:
                 self.createAttr(btnName + "Icon", icon)
@@ -898,8 +849,10 @@ class GUI_MakerMixin(object):
                         if txtvar is not None:
                             txtvar.attrib[NAME] =  subelem.attrib[attribName]
 
-
-                    widget = self.processSubelement(fr.Frame, subelem)
+                    if not uniqueframe:
+                        widget = self.processSubelement(fr.Frame, subelem)
+                    else:
+                        widget = self.processSubelement(mstrfr.Frame, subelem)
 
                 except Exception as e:
                     print(e)
@@ -972,8 +925,9 @@ class GUI_MakerMixin(object):
                     if COMMAND in options and TEXT in options and isinstance(options[COMMAND], str):
                         options[COMMAND] = self.makeCommand(options[COMMAND], self.processNoArg(options, options[TEXT]))
 
-            widgetlayout = LayoutProcessor(element)
+
             widgetName = element.tag.capitalize()
+            widgetlayout = LayoutManager(element, elementName=widgetName)
             widget_factory = GetAttr(mGraphicsLibName, widgetName)
 
             if NAME in options:
