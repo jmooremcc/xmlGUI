@@ -1,14 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="a9943a7d-7bec-4fdf-b35d-516e265cbef8" name="Default" comment="Fixes images on buttons bug that prevented image from showing&#10;modified createIcon to accept optional size kwarg. Default value is 32&#10;Moved example files to their own directory&#10;Fixed variable creation bug">
-      <change afterPath="$PROJECT_DIR$/LICENSE.txt" afterDir="false" />
+    <list default="true" id="a9943a7d-7bec-4fdf-b35d-516e265cbef8" name="Default" comment="Add Licensing information&#10;Added pdf document">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ExampleFiles/main2GUI.py" beforeDir="false" afterPath="$PROJECT_DIR$/ExampleFiles/main2GUI.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GUI_MakerMixin.py" beforeDir="false" afterPath="$PROJECT_DIR$/GUI_MakerMixin.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/StringVarPlus.py" beforeDir="false" afterPath="$PROJECT_DIR$/StringVarPlus.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TkinterInterface.py" beforeDir="false" afterPath="$PROJECT_DIR$/TkinterInterface.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utilities.py" beforeDir="false" afterPath="$PROJECT_DIR$/utilities.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -31,7 +25,7 @@
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/ExampleFiles" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="settings.editor.selected.configurable" value="settings.github" />
   </component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
@@ -213,7 +207,14 @@
       <option name="project" value="LOCAL" />
       <updated>1566493465847</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Add Licensing information&#10;Added pdf document">
+      <created>1566494068796</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1566494068796</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="Vcs.Log.History.Properties">
@@ -246,7 +247,8 @@
     <MESSAGE value="Major revision to processing engine in GUI_Maker&#10;Group types are now self-sufficient in that they create their own frame object&#10;A GenerateFrame class has been created to consistently handle Frame operations&#10;The way elements are processed is now more uniform" />
     <MESSAGE value="LayoutProcessor renamed to LayoutManager&#10;GenerateFrame now uses LayoutManager&#10;Moved more static methods outside of class definition to be independent functions." />
     <MESSAGE value="Fixes images on buttons bug that prevented image from showing&#10;modified createIcon to accept optional size kwarg. Default value is 32&#10;Moved example files to their own directory&#10;Fixed variable creation bug" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixes images on buttons bug that prevented image from showing&#10;modified createIcon to accept optional size kwarg. Default value is 32&#10;Moved example files to their own directory&#10;Fixed variable creation bug" />
+    <MESSAGE value="Add Licensing information&#10;Added pdf document" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add Licensing information&#10;Added pdf document" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
