@@ -18,7 +18,7 @@ For example, a button can be named in an xml file like this:
     <button name="delBtn" bg="red" image="gearIcon.png" >
 Inside your class, you would access this button widget using self.delBtn.
 
-This is a highly experimental library offered with no guarantees or warranties, so use it at your own risk.
+This is a highly experimental library offered "As Is" with no guarantees or warranties, so use it at your own risk.
 
 Please look at the GUI_Menu_Maker.pdf file for more information.
 
