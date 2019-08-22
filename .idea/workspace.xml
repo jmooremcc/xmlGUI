@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="a9943a7d-7bec-4fdf-b35d-516e265cbef8" name="Default" comment="Add Licensing information&#10;Added pdf document">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-    </list>
+    <list default="true" id="a9943a7d-7bec-4fdf-b35d-516e265cbef8" name="Default" comment="Remove xtra license file" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -16,6 +14,9 @@
         <option value="Python Script" />
       </list>
     </option>
+  </component>
+  <component name="Git.Rebase.Settings">
+    <option name="ONTO" value="refs/remotes/origin/master" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -214,7 +215,14 @@
       <option name="project" value="LOCAL" />
       <updated>1566494068796</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Remove xtra license file">
+      <created>1566499204432</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1566499204432</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="Vcs.Log.History.Properties">
@@ -248,7 +256,8 @@
     <MESSAGE value="LayoutProcessor renamed to LayoutManager&#10;GenerateFrame now uses LayoutManager&#10;Moved more static methods outside of class definition to be independent functions." />
     <MESSAGE value="Fixes images on buttons bug that prevented image from showing&#10;modified createIcon to accept optional size kwarg. Default value is 32&#10;Moved example files to their own directory&#10;Fixed variable creation bug" />
     <MESSAGE value="Add Licensing information&#10;Added pdf document" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add Licensing information&#10;Added pdf document" />
+    <MESSAGE value="Remove xtra license file" />
+    <option name="LAST_COMMIT_MESSAGE" value="Remove xtra license file" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
