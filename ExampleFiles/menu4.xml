@@ -1,0 +1,4 @@
+<menus>
+  <menuitem name="test1" onclick="noop"/>
+  <menuitem name="DumpVars" onclick="dumpOptvars"/>
+</menus>

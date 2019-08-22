@@ -1,0 +1,53 @@
+<form>
+  <form width="40">
+    <label>
+      <pack side="LEFT"/>
+      <text>entry:</text>
+    </label>
+    <entry width='30' bg='gold'>
+      <pack side="LEFT" fill="X"/>
+      <variable name="entry1" typevar="StringVar"/>
+    </entry>
+  </form>
+  <group name="cbgroup1" grouplist="cbgroup1list">
+    <checkbutton>
+      <pack side="TOP" anchor="W"/>
+      <text>checkbutton1</text>
+      <variable name="cb1" typevar="IntVar" onclick="noop"/>
+    </checkbutton>
+    <checkbutton>
+      <pack side="TOP" anchor="W"/>
+      <text>checkbutton2</text>
+      <variable name="cb2" typevar="IntVar" default="true" onclick="noop"/>
+    </checkbutton>
+  </group>
+
+  <group name="rbgroup1" grouplist="rbgroup1list" varname="rb1" typevar="IntVar">
+    <radiobutton value="0">
+      <pack side="TOP" anchor="W"/>
+      <text>radiobutton1</text>
+      <variable name="rb1" onclick="noop"/>
+    </radiobutton>
+    <radiobutton value="1">
+      <pack side="TOP" anchor="W"/>
+      <text>radiobutton2</text>
+      <variable name="rb1" default="true" onclick="noop"/>
+    </radiobutton>
+  </group>
+
+  <form width="40" bd="2" height="2" relief="SUNKEN">
+    <pack side="BOTTOM" anchor="CENTER" pady="20"/>
+
+    <button text='OK' command="noop">
+      <pack side="LEFT" ipadx="10" anchor="W"/>
+    </button>
+    <button width="1" relief="FLAT" state="DISABLED">
+      <pack side="LEFT" />
+    </button>
+    <button text='Cancel' onclick="quit">
+      <pack side="RIGHT"  anchor="E"/>
+    </button>
+  </form>
+
+
+</form>

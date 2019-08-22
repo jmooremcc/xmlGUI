@@ -1,0 +1,11 @@
+<menus>
+  <menuitem name="Edit Default Channel List"/>
+  <menuitem name="Set Channel Group"/>
+  <optionmenu name="Select Kodi Device" id="KodiOptions" dataprovider="myDataprovider" typebutton="checkbuttonitem" onclick="noop"/>
+  <menuitem name="Dump Option Values" onclick="dumpOptvars"/>
+  <menu name="Kodi Devices">
+    <menuitem name="Add Kodi Device"/>
+    <menuitem name="Edit Kodi Device"/>
+    <menuitem name="Remove Kodi Device"/>
+  </menu>
+</menus>

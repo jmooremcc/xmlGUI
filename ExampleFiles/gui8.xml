@@ -1,0 +1,24 @@
+<form>
+  <form width="40">
+    <label>
+      <pack side="LEFT"/>
+      <text>entry:</text>
+    </label>
+    <entry width='30' bg='gold'>
+      <pack side="LEFT" fill="X"/>
+      <textvariable name="entry1" typevar="StringVar"/>
+    </entry>
+  </form>
+  <group name="cbgroup1" grouplist="cbgroup1list" bd="2" relief="GROOVE">
+    <checkbutton text="checkbutton1">
+      <pack side="TOP" anchor="W"/>
+      <variable name="cb1" typevar="IntVar" onclick="noop"/>
+    </checkbutton>
+    <checkbutton>
+      <pack side="TOP" anchor="W"/>
+      <text>checkbutton2</text>
+      <variable name="cb2" typevar="IntVar" default="true" onclick="noop"/>
+    </checkbutton>
+  </group>
+</form>
+

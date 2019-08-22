@@ -1,0 +1,38 @@
+<form name="mainGUI" bg="green">
+  <!-- Default Directory Label -->
+  <group bg="lightblue">
+    <label bg="lightblue">
+      <pack side="LEFT" />
+      <textvariable name="defaultDirLabel" typevar="StringVar" />
+    </label>
+    <pack side="TOP" fill="X" />
+  </group>
+
+  <!-- Listbox Delete Buttons -->
+  <group bg="yellow">
+    <button text="Delete Selection(s)" width="15" command="deleteOp" noarg="true"><pack side="LEFT" /></button>
+    <label bg="blue" fg="yellow">
+      <pack side="LEFT" ipadx="10" fill="Y" />
+      <textvariable name="autoDelModeLbl" typevar="StringVar" />
+    </label>
+    <button text="Clear Entire List" width="15" command="clearAllOp" noarg="true"><pack side="RIGHT" /></button>
+    <pack side="TOP" fill="X" />
+  </group>
+
+  <!-- Listbox -->
+  <scrollbar name="scrollbar" orient="VERTICAL">
+    <pack side="RIGHT" fill="Y" />
+  </scrollbar>
+  <listbox name="urls" height="30" yscrollcommand="scrollbar.set" selectmode="EXTENDED">
+    <pack side="TOP" fill="BOTH" expand="1" />
+  </listbox>
+  <configure obj="scrollbar" command="urls.yview" />
+
+  <!-- Action Button Group -->
+  <group>
+    <button text="Paste" width="20" command="pasteOp" noarg="true"><pack side="LEFT" /></button>
+    <button text="Download" name="downloadBtn" width="20" state="DISABLED" command="downloadOp" noarg="true"><pack side="RIGHT" /></button>
+    <pack side="BOTTOM"  fill="X" />
+  </group>
+
+</form>

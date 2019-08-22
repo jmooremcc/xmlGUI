@@ -1,0 +1,12 @@
+<form>
+  <repgroup tags="label:text, entry:textvariable" data="label:Name, Job, Pay | entry:n1, j1, p1" uniqueframe="false">
+    <pack side="TOP" fill="X" expand="YES"/>
+    <label width="5"><pack side="LEFT" anchor="E"/></label>
+    <entry>
+      <pack side="LEFT" fill="X" expand="YES"/>
+      <variable typevar="StringVar" onclick="noop"/>
+    </entry>
+  </repgroup>
+  <button text="Fetch" onclick="fetch"><pack side="LEFT"/></button>
+  <button text="Quit" onclick="quit"><pack side="RIGHT"/></button>
+</form>

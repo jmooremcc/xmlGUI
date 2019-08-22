@@ -1,0 +1,5 @@
+<form>
+  <button text="Hello" ><pack side="LEFT" fill="Y"/></button>
+  <label text="Hello Container World"><pack side="TOP"/></label>
+  <button text="Quit"><pack side="RIGHT" expand="YES" fill="X"/></button>
+</form>

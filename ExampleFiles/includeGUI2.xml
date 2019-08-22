@@ -1,0 +1,13 @@
+<group name="cbgroup1" grouplist="cbgroup1list">
+  <!--pack side="LEFT"/-->
+  <checkbutton>
+    <pack side="TOP" anchor="W"/>
+    <text>checkbutton1</text>
+    <variable name="cb1" typevar="IntVar" onclick="noop"/>
+  </checkbutton>
+  <checkbutton>
+    <pack side="TOP" anchor="W"/>
+    <text>checkbutton2</text>
+    <variable name="cb2" typevar="IntVar" default="true" onclick="noop"/>
+  </checkbutton>
+</group>

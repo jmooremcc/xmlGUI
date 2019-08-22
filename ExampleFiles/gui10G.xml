@@ -1,0 +1,12 @@
+<form>
+  <repgroup tags="label:text, entry:textvariable" data="label:Name, Job, Pay | entry:n1, j1, p1" uniqueframe="false">
+    <grid />
+    <label width="5"><grid column="0"/></label>
+    <entry>
+      <grid column="1"/>
+      <variable typevar="StringVar" onclick="noop"/>
+    </entry>
+  </repgroup>
+  <button text="Fetch" onclick="fetch"><grid column="0"/></button>
+  <button text="Quit" onclick="quit"><grid column="1"/></button>
+</form>

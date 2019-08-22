@@ -1,0 +1,18 @@
+<menus>
+  <menu name="File">
+    <menuitem name="Open" onclick="noop"/>
+    <menuitem name="Close" onclick="noop"/>
+    <separator/>
+    <menuitem name="Quit" onclick="quit" shortcutindex="0"/>
+  </menu>
+  <menu name="Edit">
+    <menuitem name="Copy" onclick="noop"/>
+    <menuitem name="Paste" onclick="noop"/>
+  </menu>
+  <optionmenu name="Select Kodi Device" id="KodiOptions2" dataprovider="myDataprovider" defaultindex="0" onclick="noop"
+              typebutton="radiobuttonitem"/>
+  <menu name="Help">
+    <include filename="includemenu.xml"/>
+    <menuitem name="About" onclick="noop"/>
+  </menu>
+</menus>

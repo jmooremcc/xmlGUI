@@ -1,0 +1,38 @@
+<form>
+  <label>
+    <grid row="0" sticky="W"/>
+    <text>First</text>
+  </label>
+  <label>
+    <grid row="1" sticky="W"/>
+    <text>Second</text>
+  </label>
+  <entry>
+    <grid row="0" column="1"/>
+  </entry>
+  <entry>
+    <grid row="1" column="1"/>
+  </entry>
+  <group bd="2" relief="GROOVE">
+    <grid row="0" column="2" columnspan="2" rowspan="2"
+          sticky="W+E+N+S" padx="5" pady="5"/>
+    <label>
+      <pack side="LEFT"/>
+      <text>Fake Image</text>
+    </label>
+  </group>
+  <checkbutton>
+    <grid columnspan="2" sticky="W"/>
+    <text>Preserve Speed</text>
+    <variable name="cb1" onclick="noop" typevar="IntVar"/>
+  </checkbutton>
+  <button>
+    <grid row="2" column="2"/>
+    <text>Zoom In</text>
+    <command>noop</command>
+  </button>
+  <button onclick="noop">
+    <grid row="2" column="3"/>
+    <text>Zoom Out</text>
+  </button>
+</form>

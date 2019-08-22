@@ -1,0 +1,4 @@
+<menu name="incMenu">
+  <menuitem name="inc1" onclick="noop"/>
+  <menuitem name="inc2" onclick="noop"/>
+</menu>

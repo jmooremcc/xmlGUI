@@ -1,0 +1,21 @@
+<form>
+  <pack side="TOP" fill="X" expand="YES"/>
+  <group>
+    <pack side="TOP" fill="X" expand="YES"/>
+    <label text="Name" width="5"><pack side="LEFT" anchor="E"/></label>
+    <entry><pack side="LEFT" fill="X" expand="YES"/></entry>
+  </group>
+  <group>
+    <pack side="TOP" fill="X" expand="YES"/>
+    <label text="Job" width="5"><pack side="LEFT" anchor="E"/></label>
+    <entry><pack side="LEFT" fill="X" expand="YES"/></entry>
+  </group>
+  <group>
+    <pack side="TOP" fill="X" expand="YES"/>
+    <label text="Pay" width="5"><pack side="LEFT" anchor="E"/></label>
+    <entry><pack side="LEFT" fill="X" expand="YES"/></entry>
+  </group>
+
+  <button text="Fetch"><pack side="LEFT"/></button>
+  <button text="Quit"><pack side="RIGHT"/></button>
+</form>

@@ -64,6 +64,7 @@ TAGS = 'tags'
 DATA = 'data'
 UNIQUEFRAME = 'uniqueframe'
 NOARG = 'noarg'
+SIZE = 'size'
 
 stack = []
 stacklevel = 0
@@ -706,6 +707,7 @@ class GUI_MakerMixin(object):
     def processButtonOptions(self, element, options):
         btnName = None
         icon = None
+        isize = (32,32)
 
         if TEXT in options:
             btnName = options[TEXT]
@@ -713,11 +715,16 @@ class GUI_MakerMixin(object):
         if NAME in options:
             btnName = options[NAME]
 
+        if SIZE in options:
+            isize = tuple(map(int,options[SIZE].split(',')))
+            del options[SIZE]
+
         try:
             imageFile = options[IMAGE]
-            icon = createIcon(imageFile)
-            options[IMAGE] = icon
-        except:
+            self.tmpicon = createIcon(imageFile, size=isize)
+            # self.tmpicon = createPhotoImage(imageFile, size=isize)
+            options[IMAGE] = self.tmpicon
+        except Exception as e:
             pass
 
         if btnName is not None:
@@ -866,6 +873,7 @@ class GUI_MakerMixin(object):
 
 
     def processXmlElement(self, master, element):
+        varname = None
         if element.tag == FORM:
             return self.processForm(master, element)
 
@@ -930,7 +938,7 @@ class GUI_MakerMixin(object):
             widgetlayout = LayoutManager(element, elementName=widgetName)
             widget_factory = GetAttr(mGraphicsLibName, widgetName)
 
-            if NAME in options:
+            if element.tag not in SPECIALTAGS and NAME in options:
                 varname = options[NAME]
                 del options[NAME]
 
@@ -938,79 +946,15 @@ class GUI_MakerMixin(object):
             widget = widget_factory(master, **options)
             emitWidget(widgetName, master, copy.copy(options))
             widgetlayout.applyLayoutToWidget(widget)
+            if varname is not None:
+                self.createAttr(varname, widget)
 
             return widget
 
 
 
 
-
-
-#
 class TkGUI_MakerMixin(GUI_MakerMixin):
     def __init__(self, topLevelWindow=None, outputfilename=None):
         super().__init__(topLevelWindow=topLevelWindow, outputfilename=outputfilename)
 
-# class Test(TkGUI_MakerMixin):
-#     def __init__(self, topLevelWindow=None, outputfilename=None):
-#         super(TkGUI_MakerMixin, self).__init__(topLevelWindow=topLevelWindow, outputfilename=outputfilename)
-#
-#     def noop(self, *arg):
-#         """
-#         Sample onclick handler
-#         :param arg:
-#         :return:
-#         """
-#         if len(arg) == 1:
-#             if type(arg) == tuple:
-#                 try:
-#                     myarg = GetAttr(self, arg[0])
-#                 except:
-#                     myarg = arg[0]
-#
-#                 try:
-#                     if isinstance(myarg, StringVarPlus) or isinstance(myarg, mGraphicsLibName.IntVar):
-#                         # myarg = myarg.get()
-#                         print("noop called: %s:%s" % (arg[0],myarg.get()))
-#                         return
-#                 except:
-#                     pass
-#             else:
-#                 myarg = arg
-#         else:
-#             myarg = arg[0]
-#             print("noop called: %s:%s:%s" % (myarg, arg[1], GetAttr(self, myarg).get()))
-#             return
-#         print("noop called: %s" % myarg)
-#
-#
-#     def quit(self, *arg):
-#         """
-#         Sample onclick handler
-#         :param arg:
-#         :return:
-#         """
-#         exit()
-#
-#
-#     def fetch(self, arg):
-#         data={'Name':self.n1.get(),'Job':self.j1.get(), 'Pay':self.p1.get()}
-#         for label in data:
-#             value =data[label]
-#             print("%s:%s" % (label, value))
-
-if __name__ == '__main__':
-    root = mRootWindow()
-    root.geometry("660x360")
-
-    # m1 = Test(root)
-    # fr = m1.makeGUI(root, "gui11.xml")
-    fr = GenerateFrame(root, width="10", bg="green", bd="4")
-    # fr = Frame(root, width=10, bg="green", bd=2)
-    Label(fr.Frame, text="Hello World", bg="yellow").pack(side=TOP, expand=1, fill=X)
-    Label(fr.Frame, text="Now is the time", bg="white", fg="blue").pack(side=TOP, expand=1)
-    # fr.layoutargs={"side":BOTTOM, "expand":1}
-    fr.layoutFrame(side=BOTTOM, expand=1)
-    # fr.Frame.pack(side=TOP, fill=X, expand=1)
-    # fr.pack(expand=1, fill=Y, side=TOP)
-    root.mainloop()

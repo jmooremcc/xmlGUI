@@ -1,0 +1,5 @@
+<form>
+  <repgroup tags="label:text" data="label:John, Paul, George, Ringo" uniqueframe="true">
+    <label/>
+  </repgroup>
+</form>

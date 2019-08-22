@@ -1,0 +1,5 @@
+<group>
+  <pack fill="both"/>
+  <label name="imagelbl" photoimage="Vicky Afro.jpg" rotation="-90" />
+  <label name="fnamelbl" textvariable="labeltext" />
+</group>

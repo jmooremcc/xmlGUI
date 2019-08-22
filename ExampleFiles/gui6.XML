@@ -1,0 +1,11 @@
+<form>
+  <label text="Color Demos"/>
+  <variable name="v1" typevar="IntVar" default="false"/>
+  <radiobutton text="Color" variable="v1" value="0"><pack anchor="NW"/></radiobutton>
+  <radiobutton text="Query" variable="v1" value="1"><pack anchor="NW"/></radiobutton>
+  <radiobutton text="Input" variable="v1" value="2"><pack anchor="NW"/></radiobutton>
+  <radiobutton text="Open" variable="v1" value="3"><pack anchor="NW"/></radiobutton>
+  <radiobutton text="Error" variable="v1" value="4"><pack anchor="NW"/></radiobutton>
+  <button text="State"><pack fill="X"/></button>
+  <button text="Quit" onclick="quit"><pack fill="X"/></button>
+</form>

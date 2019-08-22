@@ -1,0 +1,18 @@
+<form name="mainwidget" bg="blue"  bd="2" relief="GROOVE">
+  <pack expand="true" fill="BOTH"/>
+  <label name="dirLabel" text="Hello World" >
+    <textvariable name="dirLabelText" typevar="StringVar" value="Hello World"/>
+  </label>
+  <group name="iPanel" width="50" height="100" bd="2" bg="black">
+    <pack fill="both"/>
+    <label name="pix1" photoimage="Taiwan.jpg" rotation="-90">
+      <pack side="LEFT"/>
+    </label>
+    <label name="pix2" bg="yellow" width="50" height="20" bd="2">
+      <pack side="LEFT" />
+    </label>
+  </group>
+  <button name="delBtn" bg="red" image="gearIcon.png" >
+    <place relx="1" x="-2" y="2" anchor="NE"/>
+  </button>
+</form>

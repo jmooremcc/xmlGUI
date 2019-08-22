@@ -520,7 +520,7 @@ class MenuMakerMixin(object):
         try:
             dispatcher[elem.tag](parent, elem)
         except Exception as e:
-            print(e.message)
+            print(e)
             raise e
             # print("%s is not a menu tag" % elem.tag)
             # raise Exception("%s is not a menu tag" % elem.tag)

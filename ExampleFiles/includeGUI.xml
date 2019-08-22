@@ -1,0 +1,13 @@
+<group name="rbgroup1" grouplist="rbgroup1list" varname="rb1" typevar="IntVar">
+  <!--pack side="LEFT"/-->
+  <radiobutton value="0">
+    <pack side="TOP" anchor="W"/>
+    <text>radiobutton1</text>
+    <variable name="rb1" onclick="noop"/>
+  </radiobutton>
+  <radiobutton value="1">
+    <pack side="TOP" anchor="W"/>
+    <text>radiobutton2</text>
+    <variable name="rb1" default="true" onclick="noop"/>
+  </radiobutton>
+</group>

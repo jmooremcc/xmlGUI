@@ -1,9 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="a9943a7d-7bec-4fdf-b35d-516e265cbef8" name="Default" comment="Major revision to processing engine in GUI_Maker&#10;Group types are now self-sufficient in that they create their own frame object&#10;A GenerateFrame class has been created to consistently handle Frame operations&#10;The way elements are processed is now more uniform">
+    <list default="true" id="a9943a7d-7bec-4fdf-b35d-516e265cbef8" name="Default" comment="LayoutProcessor renamed to LayoutManager&#10;GenerateFrame now uses LayoutManager&#10;Moved more static methods outside of class definition to be independent functions.">
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExampleFiles/Taiwan.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui1.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui10.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui10G.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui11.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui2.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui3.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui4.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui5.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui6.XML" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui7.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui8.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui9.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExampleFiles/imagewidget.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExampleFiles/includeGUI.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExampleFiles/includeGUI2.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExampleFiles/includemenu.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExampleFiles/main2GUI.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExampleFiles/mainGUI.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExampleFiles/mainGUImenu.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExampleFiles/menu2.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExampleFiles/menu3.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExampleFiles/menu4.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/GUI_MakerMixin.py" beforeDir="false" afterPath="$PROJECT_DIR$/GUI_MakerMixin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MenuMakerMixin.py" beforeDir="false" afterPath="$PROJECT_DIR$/MenuMakerMixin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/menu.xml" beforeDir="false" afterPath="$PROJECT_DIR$/ExampleFiles/menu.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utilities.py" beforeDir="false" afterPath="$PROJECT_DIR$/utilities.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -22,26 +50,10 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectId" id="1PVtwDU7oZzXfaRxgIL1yJKTPVw" />
-  <component name="ProjectInspectionProfilesVisibleTreeState">
-    <entry key="Project Default">
-      <profile-state>
-        <expanded-state>
-          <State>
-            <id />
-          </State>
-        </expanded-state>
-        <selected-state>
-          <State>
-            <id>Buildout</id>
-          </State>
-        </selected-state>
-      </profile-state>
-    </entry>
-  </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/ExampleFiles" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="PyConsoleOptionsProvider">
@@ -50,6 +62,16 @@
         <option name="myUseModuleSdk" value="true" />
       </console-settings>
     </option>
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\My Documents\GitHub\xmlGUI\ExampleFiles" />
+      <recent name="D:\My Documents\GitHub\xmlGUI\Example Files" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\My Documents\GitHub\xmlGUI\ExampleFiles" />
+      <recent name="D:\My Documents\GitHub\xmlGUI" />
+    </key>
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -63,8 +85,29 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.test1">
-    <configuration name="MenuMaker" type="PythonConfigurationType" factoryName="Python" temporary="true">
+  <component name="RunManager" selected="Python.test1 (2)">
+    <configuration name="main2GUI (1)" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="MenuMakerMixin" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/ExampleFiles" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/ExampleFiles/main2GUI.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="main2GUI" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="MenuMakerMixin" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -76,7 +119,49 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="D:\My Documents\GitHub\MenuMaker\MenuMakerMixin.py" />
+      <option name="SCRIPT_NAME" value="D:\My Documents\GitHub\xmlGUI\Example Files\main2GUI.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="test1 (1)" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="MenuMakerMixin" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Example Files" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Example Files/test1.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="test1 (2)" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="MenuMakerMixin" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/ExampleFiles" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/ExampleFiles/test1.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -97,7 +182,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test1.py" />
+      <option name="SCRIPT_NAME" value="D:\My Documents\GitHub\xmlGUI\Example Files\test1.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -108,8 +193,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.test1 (2)" />
+        <item itemvalue="Python.main2GUI (1)" />
+        <item itemvalue="Python.test1 (1)" />
         <item itemvalue="Python.test1" />
-        <item itemvalue="Python.MenuMaker" />
+        <item itemvalue="Python.main2GUI" />
       </list>
     </recent_temporary>
   </component>
@@ -134,8 +222,25 @@
       <option name="project" value="LOCAL" />
       <updated>1566233323841</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="LayoutProcessor renamed to LayoutManager&#10;GenerateFrame now uses LayoutManager&#10;Moved more static methods outside of class definition to be independent functions.">
+      <created>1566314017354</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1566314017354</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
+  </component>
+  <component name="Vcs.Log.History.Properties">
+    <option name="COLUMN_ORDER">
+      <list>
+        <option value="0" />
+        <option value="2" />
+        <option value="3" />
+        <option value="1" />
+      </list>
+    </option>
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
@@ -155,7 +260,8 @@
       <path value="$PROJECT_DIR$" />
     </ignored-roots>
     <MESSAGE value="Major revision to processing engine in GUI_Maker&#10;Group types are now self-sufficient in that they create their own frame object&#10;A GenerateFrame class has been created to consistently handle Frame operations&#10;The way elements are processed is now more uniform" />
-    <option name="LAST_COMMIT_MESSAGE" value="Major revision to processing engine in GUI_Maker&#10;Group types are now self-sufficient in that they create their own frame object&#10;A GenerateFrame class has been created to consistently handle Frame operations&#10;The way elements are processed is now more uniform" />
+    <MESSAGE value="LayoutProcessor renamed to LayoutManager&#10;GenerateFrame now uses LayoutManager&#10;Moved more static methods outside of class definition to be independent functions." />
+    <option name="LAST_COMMIT_MESSAGE" value="LayoutProcessor renamed to LayoutManager&#10;GenerateFrame now uses LayoutManager&#10;Moved more static methods outside of class definition to be independent functions." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -197,50 +303,52 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
-          <line>833</line>
+          <line>840</line>
           <option name="timeStamp" value="24" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
-          <line>827</line>
+          <line>834</line>
           <option name="timeStamp" value="28" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
-          <line>859</line>
+          <line>866</line>
           <option name="timeStamp" value="29" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
-          <line>276</line>
-          <option name="timeStamp" value="37" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
-          <line>706</line>
-          <option name="timeStamp" value="42" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
-          <line>722</line>
-          <option name="timeStamp" value="43" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
-          <line>768</line>
+          <line>775</line>
           <option name="timeStamp" value="44" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
-          <line>929</line>
-          <option name="timeStamp" value="45" />
+          <url>file://$PROJECT_DIR$/ExampleFiles/test1.py</url>
+          <line>18</line>
+          <option name="timeStamp" value="50" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
-          <line>279</line>
-          <option name="timeStamp" value="46" />
+          <line>571</line>
+          <option name="timeStamp" value="52" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
+          <line>893</line>
+          <option name="timeStamp" value="53" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
+          <line>718</line>
+          <option name="timeStamp" value="57" />
         </line-breakpoint>
       </breakpoints>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
     </breakpoint-manager>
   </component>
   <component name="masterDetails">

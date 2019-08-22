@@ -12,14 +12,14 @@ def GetAttr(parent, fnname):
     else:
         return getattr(parent,fnname)
 
-def createIcon(imgFilename):
+def createIcon(imgFilename, size=(32,32)):
     """
     Converts an image into a bitmap that can be used on a menubutton
     :param imgFilename: str
     :return: ImageTk.PhotoImage
     """
     image = Image.open(imgFilename)
-    image2 = image.resize((32, 32), Image.ANTIALIAS)
+    image2 = image.resize(size, Image.ANTIALIAS)
     # setattr(self, iconVarname, ImageTk.PhotoImage(image))
     return ImageTk.PhotoImage(image2)
 
@@ -36,9 +36,9 @@ def calcSize(imgSize, size):
 
 def createPhotoImage(fname, size=(300,300), angle=0, defaultimage=None, noDeleteFlag=False):
     try:
+        rotateFlag = False
         if fname != "...":
             image = Image.open(fname)
-            rotateFlag = False
             # print("calc newSize")
             newSize, aspect = calcSize(image.size, size)
             # print("newSize:{}".format(newSize))

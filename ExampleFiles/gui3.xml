@@ -1,0 +1,41 @@
+<form>
+  <group name="topgrp" bd="2" relief="GROOVE">
+    <checkbutton text="Python">
+      <pack side="LEFT" anchor="W" expand="YES"/>
+      <variable typevar="IntVar" onclick="noop"/>
+    </checkbutton>
+    <checkbutton text="Ruby">
+      <pack side="LEFT" anchor="W" expand="YES"/>
+      <variable typevar="IntVar" onclick="noop"/>
+    </checkbutton>
+    <checkbutton text="Pearl">
+      <pack side="LEFT" anchor="W" expand="YES"/>
+      <variable typevar="IntVar" onclick="noop"/>
+    </checkbutton>
+    <checkbutton text="C++">
+      <pack side="LEFT" anchor="W" expand="YES"/>
+      <variable typevar="IntVar" onclick="noop"/>
+    </checkbutton>
+  </group>
+  <group>
+    <include filename="includeGUI.xml"><pack side="LEFT"/></include>
+    <include filename="includeGUI2.xml"><pack side="LEFT"/></include>
+  </group>
+  <group name="bottomgrp" bd="2" relief="GROOVE" width="40">
+    <pack anchor="W" fill="X"/>
+    <checkbutton text="English">
+      <pack side="LEFT" anchor="W" expand="YES"/>
+      <variable default="true" typevar="IntVar" onclick="noop"/>
+    </checkbutton>
+    <checkbutton text="German">
+      <pack side="LEFT" anchor="W" expand="YES"/>
+      <variable default="true" typevar="IntVar" onclick="noop"/>
+    </checkbutton>
+    <button text="Peek" command="noop">
+      <pack side="LEFT" ipadx="6"/>
+    </button>
+    <button text="Quit" command="noop">
+      <pack side="LEFT" ipadx="6"/>
+    </button>
+  </group>
+</form>
