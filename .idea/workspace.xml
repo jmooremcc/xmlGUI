@@ -1,36 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="a9943a7d-7bec-4fdf-b35d-516e265cbef8" name="Default" comment="LayoutProcessor renamed to LayoutManager&#10;GenerateFrame now uses LayoutManager&#10;Moved more static methods outside of class definition to be independent functions.">
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ExampleFiles/Taiwan.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui1.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui10.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui10G.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui11.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui2.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui3.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui4.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui5.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui6.XML" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui7.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui8.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ExampleFiles/gui9.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ExampleFiles/imagewidget.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ExampleFiles/includeGUI.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ExampleFiles/includeGUI2.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ExampleFiles/includemenu.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ExampleFiles/main2GUI.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ExampleFiles/mainGUI.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ExampleFiles/mainGUImenu.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ExampleFiles/menu2.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ExampleFiles/menu3.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ExampleFiles/menu4.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="a9943a7d-7bec-4fdf-b35d-516e265cbef8" name="Default" comment="Fixes images on buttons bug that prevented image from showing&#10;modified createIcon to accept optional size kwarg. Default value is 32&#10;Moved example files to their own directory&#10;Fixed variable creation bug">
+      <change afterPath="$PROJECT_DIR$/LICENSE.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ExampleFiles/main2GUI.py" beforeDir="false" afterPath="$PROJECT_DIR$/ExampleFiles/main2GUI.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/GUI_MakerMixin.py" beforeDir="false" afterPath="$PROJECT_DIR$/GUI_MakerMixin.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MenuMakerMixin.py" beforeDir="false" afterPath="$PROJECT_DIR$/MenuMakerMixin.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/menu.xml" beforeDir="false" afterPath="$PROJECT_DIR$/ExampleFiles/menu.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/StringVarPlus.py" beforeDir="false" afterPath="$PROJECT_DIR$/StringVarPlus.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TkinterInterface.py" beforeDir="false" afterPath="$PROJECT_DIR$/TkinterInterface.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utilities.py" beforeDir="false" afterPath="$PROJECT_DIR$/utilities.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -229,7 +206,14 @@
       <option name="project" value="LOCAL" />
       <updated>1566314017354</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Fixes images on buttons bug that prevented image from showing&#10;modified createIcon to accept optional size kwarg. Default value is 32&#10;Moved example files to their own directory&#10;Fixed variable creation bug">
+      <created>1566493465847</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1566493465847</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="Vcs.Log.History.Properties">
@@ -261,7 +245,8 @@
     </ignored-roots>
     <MESSAGE value="Major revision to processing engine in GUI_Maker&#10;Group types are now self-sufficient in that they create their own frame object&#10;A GenerateFrame class has been created to consistently handle Frame operations&#10;The way elements are processed is now more uniform" />
     <MESSAGE value="LayoutProcessor renamed to LayoutManager&#10;GenerateFrame now uses LayoutManager&#10;Moved more static methods outside of class definition to be independent functions." />
-    <option name="LAST_COMMIT_MESSAGE" value="LayoutProcessor renamed to LayoutManager&#10;GenerateFrame now uses LayoutManager&#10;Moved more static methods outside of class definition to be independent functions." />
+    <MESSAGE value="Fixes images on buttons bug that prevented image from showing&#10;modified createIcon to accept optional size kwarg. Default value is 32&#10;Moved example files to their own directory&#10;Fixed variable creation bug" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixes images on buttons bug that prevented image from showing&#10;modified createIcon to accept optional size kwarg. Default value is 32&#10;Moved example files to their own directory&#10;Fixed variable creation bug" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -303,42 +288,42 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
-          <line>840</line>
+          <line>860</line>
           <option name="timeStamp" value="24" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
-          <line>834</line>
+          <line>854</line>
           <option name="timeStamp" value="28" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
-          <line>866</line>
+          <line>886</line>
           <option name="timeStamp" value="29" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
-          <line>775</line>
+          <line>795</line>
           <option name="timeStamp" value="44" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/ExampleFiles/test1.py</url>
-          <line>18</line>
+          <line>37</line>
           <option name="timeStamp" value="50" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
-          <line>571</line>
+          <line>591</line>
           <option name="timeStamp" value="52" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
-          <line>893</line>
+          <line>913</line>
           <option name="timeStamp" value="53" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
-          <line>718</line>
+          <line>738</line>
           <option name="timeStamp" value="57" />
         </line-breakpoint>
       </breakpoints>
