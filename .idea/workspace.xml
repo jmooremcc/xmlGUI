@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="a9943a7d-7bec-4fdf-b35d-516e265cbef8" name="Default" comment="fix test file">
-      <change beforePath="$PROJECT_DIR$/ExampleFiles/test1.py" beforeDir="false" afterPath="$PROJECT_DIR$/ExampleFiles/test1.py" afterDir="false" />
+    <list default="true" id="a9943a7d-7bec-4fdf-b35d-516e265cbef8" name="Default" comment="modify test file">
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -238,7 +238,14 @@
       <option name="project" value="LOCAL" />
       <updated>1566499723453</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="modify test file">
+      <created>1566500206224</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1566500206224</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="Vcs.Log.History.Properties">
@@ -275,7 +282,8 @@
     <MESSAGE value="Remove xtra license file" />
     <MESSAGE value="add images" />
     <MESSAGE value="add test files" />
-    <option name="LAST_COMMIT_MESSAGE" value="add test files" />
+    <MESSAGE value="modify test file" />
+    <option name="LAST_COMMIT_MESSAGE" value="modify test file" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
