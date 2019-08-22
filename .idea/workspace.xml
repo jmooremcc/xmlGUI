@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="a9943a7d-7bec-4fdf-b35d-516e265cbef8" name="Default" comment="Remove xtra license file" />
+    <list default="true" id="a9943a7d-7bec-4fdf-b35d-516e265cbef8" name="Default" comment="add images" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -222,7 +222,14 @@
       <option name="project" value="LOCAL" />
       <updated>1566499204432</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="add images">
+      <created>1566499523274</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1566499523274</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="Vcs.Log.History.Properties">
@@ -257,7 +264,8 @@
     <MESSAGE value="Fixes images on buttons bug that prevented image from showing&#10;modified createIcon to accept optional size kwarg. Default value is 32&#10;Moved example files to their own directory&#10;Fixed variable creation bug" />
     <MESSAGE value="Add Licensing information&#10;Added pdf document" />
     <MESSAGE value="Remove xtra license file" />
-    <option name="LAST_COMMIT_MESSAGE" value="Remove xtra license file" />
+    <MESSAGE value="add images" />
+    <option name="LAST_COMMIT_MESSAGE" value="add images" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

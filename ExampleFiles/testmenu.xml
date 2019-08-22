@@ -1,0 +1,17 @@
+<menus>
+  <menu name="File">
+    <menuitem name="Process Directory to iTunes" noarg="false" onclick="noop" />
+    <menuitem name="Exit" onclick="quit" noarg="true" />
+  </menu>
+
+  <menu name="Settings">
+    <menuitem name="Set Music Directory" noarg="true" onclick="noop" />
+    <menuitem name="Set URL AutoDelete Mode" noarg="false" onclick="noop" />
+    <menuitem name="Set Song Art Download Mode" noarg="false" onclick="noop" />
+  </menu>
+
+  <menu name="Help">
+    <menuitem name="About" noarg="false" onclick="noop"/>
+  </menu>
+
+</menus>
