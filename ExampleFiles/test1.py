@@ -29,6 +29,14 @@ class Test(GUI_MakerMixin, MenuMakerMixin):
         GUI_MakerMixin.__init__(self, topLevelWindow=topLevelWindow, outputfilename=outputfilename)
         MenuMakerMixin.__init__(self, topLevelWidget=topLevelWindow)
 
+    def demoProc(self, *arg):
+        myarg = arg[0]
+        if 'demo'in myarg.lower():
+            val = self.v1.get()
+            print("Demo called: {}:{}".format(myarg, val))
+
+
+
     def noop(self, *arg):
         """
         Sample onclick handler
@@ -84,6 +92,6 @@ root = mRootWindow()
 root.geometry("330x360")
 os.chdir(r"D:\My Documents\GitHub\xmlGUI\ExampleFiles")
 m1 = Test(root)
-m1.makeGUI(root, "gui3.xml")
+m1.makeGUI(root, "gui6.xml")
 m1.generateMenu("testmenu.xml", root)
 root.mainloop()

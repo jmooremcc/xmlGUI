@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="a9943a7d-7bec-4fdf-b35d-516e265cbef8" name="Default" comment="update Readme file">
+    <list default="true" id="a9943a7d-7bec-4fdf-b35d-516e265cbef8" name="Default" comment="mods for gui6">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ExampleFiles/gui3.xml" beforeDir="false" afterPath="$PROJECT_DIR$/ExampleFiles/gui3.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ExampleFiles/gui6.XML" beforeDir="false" afterPath="$PROJECT_DIR$/ExampleFiles/gui6.XML" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ExampleFiles/test1.py" beforeDir="false" afterPath="$PROJECT_DIR$/ExampleFiles/test1.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -254,7 +254,14 @@
       <option name="project" value="LOCAL" />
       <updated>1566501250420</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="fix to test1.py">
+      <created>1566519799187</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1566519799187</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="Vcs.Log.History.Properties">
@@ -293,7 +300,8 @@
     <MESSAGE value="add test files" />
     <MESSAGE value="modify test file" />
     <MESSAGE value="update Readme file" />
-    <option name="LAST_COMMIT_MESSAGE" value="update Readme file" />
+    <MESSAGE value="fix to test1.py" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix to test1.py" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -355,7 +363,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/ExampleFiles/test1.py</url>
-          <line>37</line>
+          <line>45</line>
           <option name="timeStamp" value="50" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -367,6 +375,11 @@
           <url>file://$PROJECT_DIR$/GUI_MakerMixin.py</url>
           <line>738</line>
           <option name="timeStamp" value="57" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/ExampleFiles/test1.py</url>
+          <line>32</line>
+          <option name="timeStamp" value="59" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>

@@ -6,6 +6,6 @@
   <radiobutton text="Input" variable="v1" value="2"><pack anchor="NW"/></radiobutton>
   <radiobutton text="Open" variable="v1" value="3"><pack anchor="NW"/></radiobutton>
   <radiobutton text="Error" variable="v1" value="4"><pack anchor="NW"/></radiobutton>
-  <button text="State"><pack fill="X"/></button>
+  <button text="Demo" onclick="demoProc"><pack fill="X"/></button>
   <button text="Quit" onclick="quit"><pack fill="X"/></button>
 </form>
