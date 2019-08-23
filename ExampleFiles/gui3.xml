@@ -34,7 +34,7 @@
     <button text="Peek" command="noop">
       <pack side="LEFT" ipadx="6"/>
     </button>
-    <button text="Quit" command="noop">
+    <button text="Quit" command="quit">
       <pack side="LEFT" ipadx="6"/>
     </button>
   </group>

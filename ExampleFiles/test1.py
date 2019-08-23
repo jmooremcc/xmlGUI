@@ -45,7 +45,7 @@ class Test(GUI_MakerMixin, MenuMakerMixin):
                 try:
                     if isinstance(myarg, StringVarPlus) or isinstance(myarg, mGraphicsLibName.IntVar):
                         # myarg = myarg.get()
-                        print("noop called: {}}:{}}".format(arg[0], myarg.get()))
+                        print("noop called: {}:{}".format(arg[0], myarg.get()))
                         return
                     else:
                         print("arg: {}".format(arg))
