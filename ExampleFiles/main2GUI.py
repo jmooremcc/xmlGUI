@@ -53,7 +53,7 @@ class GUI(GUI_MakerMixin,MenuMakerMixin):
         frame = tk.Frame(root, bd=2)
         MenuMakerMixin.__init__(self, frame)
         GUI_MakerMixin.__init__(self, frame)
-        self.makeGUI(frame,"mainGUI.xml")
+        self.makeGUI(frame,"vlcGUI.xml")
         self.generateMenu("mainGUImenu.xml", root)
 
         self.defaultDirLabel.set(DEFAULT_DIR_Template.format(r"D:\Music"))

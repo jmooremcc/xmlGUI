@@ -38,7 +38,13 @@ def mFrame(master, *args, **kwargs):
 def mRootWindow():
     return Tk()
 
-
+def getTtk():
+    try:
+        import tkinter.ttk
+        return tkinter.ttk
+    except:
+        import Tkinter.ttk
+        return Tkinter.ttk
 
 def getTkinter():
     try:
@@ -49,6 +55,7 @@ def getTkinter():
         return Tkinter
 
 mGraphicsLibName = getTkinter()
+mttkGraphicsLibName = getTtk()
 
 def mPartial( func, *args, **keywords):
     return partial( func, *args, **keywords)

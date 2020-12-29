@@ -28,14 +28,17 @@ try:
     import Tkconstants
 except ImportError:
     from tkinter import *
+    from tkinter import ttk
     import tkinter.constants
+    import tkinter as tk
     Tkconstants = tkinter.constants
 
-from TkinterInterface import mFrame, mRootWindow, mGraphicsLibName, mPartial
+from TkinterInterface import mFrame, mRootWindow, mGraphicsLibName, mPartial, mttkGraphicsLibName
 import xml.etree.ElementTree as ET
 # from functools import partial
 from StringVarPlus import StringVarPlus
 from utilities import GetAttr, createIcon, createPhotoImage
+
 
 
 #Special Tags
@@ -57,6 +60,8 @@ OBJ = 'obj'
 EXPR ='expr'
 COLUMN = 'column'
 ROW = 'row'
+CHOICES = "choices"
+SEPARATOR = "separator"
 
 #Regular Tags that require special treatment
 CHECKBUTTON = 'checkbutton'
@@ -65,8 +70,9 @@ SCALE = 'scale'
 BUTTON = 'button'
 ENTRY = 'entry'
 LABEL = 'label'
+OPTIONMENU = 'optionmenu'
 
-SPECIALTAGS = [CHECKBUTTON,RADIOBUTTON,SCALE,BUTTON,ENTRY,VARIABLE,TEXTVARIABLE,LABEL, CONFIGURE]
+SPECIALTAGS = [CHECKBUTTON,RADIOBUTTON,SCALE,BUTTON,ENTRY,VARIABLE,TEXTVARIABLE,LABEL, CONFIGURE, OPTIONMENU]
 
 #Special Attributes
 ONCLICK = 'onclick'
@@ -264,6 +270,22 @@ def emitFrame(widgetname, master, *args, **kwargs):
 
     print(pad + outputstr,file= outputfp)
 
+
+class CreateGUI_Window():
+    def __init__(self, apptitle, windowsize=(600,400)):
+        root = self.root = tk.Tk()
+        self.toplevel = self.root.winfo_toplevel()
+        self.root.title(apptitle)
+        self.root.minsize(*windowsize)
+        self.root.resizable(0, 0)
+        self.root.protocol('WM_DELETE_WINDOW', self.onExit)  # root is your root window
+        frame = tk.Frame(root, bd=2)
+        frame.pack(side=TOP, fill=BOTH)
+        return frame
+
+    def onExit(self):
+        exit()
+
 class LayoutManager():
     def __init__(self, element, parent = None, elementName=None):
         self.element = element
@@ -306,8 +328,17 @@ class LayoutManager():
 
             widget.pack()
         elif self.packargs is not None and widget is not None:
+            propagateflag = False
+            if 'propagate' in self.packargs.keys():
+                propagateflag = True
+                propagateValue = self.packargs['propagate']
             emitPackargs(self.element, self.packargs)
+            if propagateflag:
+                widget.pack_propagate(propagateValue)
+                del self.packargs['propagate']
+
             widget.pack(**self.packargs)
+
         elif self.gridargs is not None and widget is not None:
             emitGridargs(self.element, self.gridargs)
             widget.grid(**self.gridargs)
@@ -581,6 +612,7 @@ class GUI_MakerMixin(object):
             if VALUE in textvar.attrib:
                 value = textvar.attrib[VALUE]
                 varfunc.set(value)
+                del textvar.attrib[VALUE]
 
             element.remove(textvar)
 
@@ -588,6 +620,7 @@ class GUI_MakerMixin(object):
             lblname = None
             if NAME in options:
                 lblname = options[NAME]
+                del options[NAME]
             if PHOTOIMAGE in options:
                 imageFile = options[PHOTOIMAGE]
                 rotation = 0
@@ -636,10 +669,42 @@ class GUI_MakerMixin(object):
 
         return options
 
+    def processMenuoptionOptions(self, element, options):
+        args = None
+        optvar = element.find(TEXTVARIABLE)
+        if optvar is None:
+            optvar = element.find(VARIABLE)
+
+        if optvar is not None:
+            if NAME in optvar.attrib:
+                varname = optvar.attrib[NAME]
+            else:
+                raise Exception("OptionMenu Variable Tag missing name attribute")
+
+            varfunc = GetAttr(mGraphicsLibName, optvar.attrib[TYPEVAR])() #type StringVar
+            self.createAttr(varname, varfunc)
+            try:
+                element.remove(optvar)
+            except:
+                pass
+
+        if CHOICES in options:
+            choicelist = options[CHOICES].split(',') #type:list
+            del options[CHOICES]
+            value = choicelist[0]
+
+            if varfunc is not None:
+                varfunc.set(value)
+
+            choicelist.insert(0, varfunc)
+            args = choicelist
+
+        return args
+
+
     def processRadiobuttonOptions(self, element, options):
         optvar = element.find(VARIABLE)
         if optvar is not None:
-
             if NAME in optvar.attrib:
                 varname = optvar.attrib[NAME]
             elif TEXT in options:
@@ -731,9 +796,11 @@ class GUI_MakerMixin(object):
 
         if TEXT in options:
             btnName = options[TEXT]
+            del options[TEXT]
 
         if NAME in options:
             btnName = options[NAME]
+            del options[NAME]
 
         if SIZE in options:
             isize = tuple(map(int,options[SIZE].split(',')))
@@ -741,9 +808,9 @@ class GUI_MakerMixin(object):
 
         try:
             imageFile = options[IMAGE]
-            self.tmpicon = createIcon(imageFile, size=isize)
+            icon = createIcon(imageFile, size=isize)
             # self.tmpicon = createPhotoImage(imageFile, size=isize)
-            options[IMAGE] = self.tmpicon
+            options[IMAGE] = icon
         except Exception as e:
             pass
 
@@ -766,8 +833,8 @@ class GUI_MakerMixin(object):
                     del (options[ONCLICK])
 
 
-            if icon is not None:
-                self.createAttr(btnName + "Icon", icon)
+        if icon is not None:
+            self.createAttr(btnName + "Icon", icon)
 
 
         return options
@@ -894,6 +961,7 @@ class GUI_MakerMixin(object):
 
     def processXmlElement(self, master, element):
         varname = None
+        args = None
         if element.tag == FORM:
             return self.processForm(master, element)
 
@@ -932,6 +1000,12 @@ class GUI_MakerMixin(object):
                     options = self.processVariableTagOptions(element, options)
                     return
 
+                elif element.tag == OPTIONMENU:
+                    if NAME in options:
+                        varname = options[NAME]
+                        del(options[NAME])
+                    args = self.processMenuoptionOptions(element, options)
+
                 elif element.tag == CONFIGURE:
                     obj = element.attrib[OBJ]
                     obj.configure(command = element.attrib[COMMAND])
@@ -953,17 +1027,26 @@ class GUI_MakerMixin(object):
                     if COMMAND in options and TEXT in options and isinstance(options[COMMAND], str):
                         options[COMMAND] = self.makeCommand(options[COMMAND], self.processNoArg(options, options[TEXT]))
 
+            if OPTIONMENU not in element.tag:
+                widgetName = element.tag.capitalize()
+            else:
+                widgetName = 'OptionMenu'
 
-            widgetName = element.tag.capitalize()
             widgetlayout = LayoutManager(element, elementName=widgetName)
-            widget_factory = GetAttr(mGraphicsLibName, widgetName)
+            try:
+                widget_factory = GetAttr(mGraphicsLibName, widgetName)
+            except:
+                widget_factory = GetAttr(mttkGraphicsLibName, widgetName)
 
             if element.tag not in SPECIALTAGS and NAME in options:
                 varname = options[NAME]
                 del options[NAME]
 
+            if args is None:
+                widget = widget_factory(master, **options)
+            else:
+                widget = widget_factory(master, *args, **options)
 
-            widget = widget_factory(master, **options)
             emitWidget(widgetName, master, copy.copy(options))
             widgetlayout.applyLayoutToWidget(widget)
             if varname is not None:
