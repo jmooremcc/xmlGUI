@@ -60,8 +60,9 @@ OBJ = 'obj'
 EXPR ='expr'
 COLUMN = 'column'
 ROW = 'row'
-CHOICES = "choices"
-SEPARATOR = "separator"
+CHOICES = 'choices'
+SEPARATOR = 'separator'
+BIND = 'bind'
 
 #Regular Tags that require special treatment
 CHECKBUTTON = 'checkbutton'
@@ -72,7 +73,7 @@ ENTRY = 'entry'
 LABEL = 'label'
 OPTIONMENU = 'optionmenu'
 
-SPECIALTAGS = [CHECKBUTTON,RADIOBUTTON,SCALE,BUTTON,ENTRY,VARIABLE,TEXTVARIABLE,LABEL, CONFIGURE, OPTIONMENU]
+SPECIALTAGS = [CHECKBUTTON,RADIOBUTTON,SCALE,BUTTON,ENTRY,VARIABLE,TEXTVARIABLE,LABEL, CONFIGURE, OPTIONMENU, BIND]
 
 #Special Attributes
 ONCLICK = 'onclick'
@@ -91,7 +92,7 @@ DATA = 'data'
 UNIQUEFRAME = 'uniqueframe'
 NOARG = 'noarg'
 SIZE = 'size'
-
+ONCHANGE = 'onchange'
 stack = []
 stacklevel = 0
 outputfp = sys.stdout
@@ -688,8 +689,16 @@ class GUI_MakerMixin(object):
             except:
                 pass
 
+            try:
+                onChangefunc = options[ONCHANGE]
+                del options[ONCHANGE]
+                cb = lambda name, index, mode, var=varfunc : onChangefunc(var)
+                varfunc.trace('w', cb)
+            except: pass
+
         if CHOICES in options:
             choicelist = options[CHOICES].split(',') #type:list
+            choicelist = [choice.strip() for choice in choicelist]
             del options[CHOICES]
             value = choicelist[0]
 
@@ -765,6 +774,24 @@ class GUI_MakerMixin(object):
 
         return options
 
+    def processBindOptions(self, element, options:dict):
+        try:
+            widget = options['obj'] #type:tk.Widget
+            var = options['var']
+            callback = options['callback']
+            events = [ f"<{event.strip()}>" for event in options['events'].split(',')]
+
+            cb = lambda e, arg=var: callback(e, arg)
+            for event in events:
+                widget.bind(event, cb)
+
+        except Exception as e:
+            print(f"Bind Error:\n\t{str(e)}")
+
+
+
+
+
     def processIncludeTag(self, parent, elem):
         if FILENAME in elem.attrib:
             filename = elem.attrib[FILENAME]
@@ -800,7 +827,7 @@ class GUI_MakerMixin(object):
 
         if NAME in options:
             btnName = options[NAME]
-            del options[NAME]
+            # del options[NAME]
 
         if SIZE in options:
             isize = tuple(map(int,options[SIZE].split(',')))
@@ -1006,6 +1033,10 @@ class GUI_MakerMixin(object):
                         del(options[NAME])
                     args = self.processMenuoptionOptions(element, options)
 
+                elif element.tag == BIND:
+                    self.processBindOptions(element, options)
+                    return
+
                 elif element.tag == CONFIGURE:
                     obj = element.attrib[OBJ]
                     obj.configure(command = element.attrib[COMMAND])
@@ -1038,7 +1069,7 @@ class GUI_MakerMixin(object):
             except:
                 widget_factory = GetAttr(mttkGraphicsLibName, widgetName)
 
-            if element.tag not in SPECIALTAGS and NAME in options:
+            if element.tag in SPECIALTAGS and NAME in options:
                 varname = options[NAME]
                 del options[NAME]
 
