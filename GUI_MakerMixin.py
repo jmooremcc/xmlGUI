@@ -22,6 +22,7 @@
 from __future__ import print_function
 import sys
 import copy
+import re
 #import Tkinter
 try:
     from Tkinter import *
@@ -63,6 +64,8 @@ ROW = 'row'
 CHOICES = 'choices'
 SEPARATOR = 'separator'
 BIND = 'bind'
+PARAMS = 'params'
+SRCHEXP = '__param__.*'
 
 #Regular Tags that require special treatment
 CHECKBUTTON = 'checkbutton'
@@ -144,6 +147,33 @@ def extractRgDataDict(data):
         datadict[key] = b3
 
     return datadict
+
+def extractParms(elem):
+    parms={}
+
+    for e in elem.findall(PARAMS): #type: ET
+        parms.update(e.attrib)
+
+    return parms if len(parms) > 0 else None
+
+def processParms(elem, parms):
+    if elem.text is not None:
+        m=re.match(SRCHEXP, elem.text)
+        if m is not None:
+            elem.text = parms[m.string]
+
+    for k,v in elem.attrib.items():
+        m=re.match(SRCHEXP,v)
+        if m is not None:
+            try:
+                value = parms[m.string]
+                elem.attrib[k] = value
+            except Exception as e:
+                raise Exception(f"ERROR: Invalid Parm -> {k}:{m.string} in element {elem.tag}")
+
+    for e in elem:
+        processParms(e, parms)
+
 
 def GetAttr(parent, fnname):
     nlist = [parent] + fnname.split('.')
@@ -697,16 +727,25 @@ class GUI_MakerMixin(object):
             except: pass
 
         if CHOICES in options:
-            choicelist = options[CHOICES].split(',') #type:list
-            choicelist = [choice.strip() for choice in choicelist]
-            del options[CHOICES]
-            value = choicelist[0]
+            try:
+                choicelist = options[CHOICES].split(',') #type:list
+                choicelist = [choice.strip() for choice in choicelist]
+                del options[CHOICES]
+                value = choicelist[0]
 
-            if varfunc is not None:
-                varfunc.set(value)
+                if varfunc is not None:
+                    varfunc.set(value)
 
-            choicelist.insert(0, varfunc)
-            args = choicelist
+                choicelist.insert(0, varfunc)
+                args = choicelist
+            except:
+                varname = options[CHOICES]
+                del options[CHOICES]
+                choicelist = varname.get().split(',')
+                choicelist = [choice.strip() for choice in choicelist]
+                varname.set(choicelist[0])
+                choicelist.insert(0,varname)
+                args = choicelist
 
         return args
 
@@ -793,13 +832,17 @@ class GUI_MakerMixin(object):
 
 
     def processIncludeTag(self, parent, elem):
+
+        parms = extractParms(elem)
+
         if FILENAME in elem.attrib:
             filename = elem.attrib[FILENAME]
             elem = self.parseXMLFile(filename)
-            # emitFrame(FRAME.capitalize(), parent)
-            # pushFrame()
+            # if parms is not None:
+            processParms(elem, parms)
+
             val = self.processXmlElement(parent, elem)
-            # popFrame()
+
             return val
 
     def processNoArg(self, options, var):
