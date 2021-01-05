@@ -157,17 +157,28 @@ def extractParms(elem):
     return parms if len(parms) > 0 else None
 
 def processParms(elem, parms):
+    """ This function assumes parm format of parm:defaultvalue"""
     if elem.text is not None:
         m=re.match(SRCHEXP, elem.text)
         if m is not None:
-            elem.text = parms[m.string]
+            try:
+                v2 = m.string.split(':')
+                if v2[0] in parms:
+                    elem.text = parms[v2[0]]
+                else: # Use default value
+                    elem.text = v2[1]
+            except:
+                raise Exception(f"ERROR: Invalid Parm -> {m.string} in element {elem.tag}")
 
     for k,v in elem.attrib.items():
         m=re.match(SRCHEXP,v)
         if m is not None:
             try:
-                value = parms[m.string]
-                elem.attrib[k] = value
+                v2 = m.string.split(':')
+                if v2[0] in parms:
+                    elem.attrib[k] = parms[v2[0]]
+                else:  # Use default value
+                    elem.attrib[k] = v2[1]
             except Exception as e:
                 raise Exception(f"ERROR: Invalid Parm -> {k}:{m.string} in element {elem.tag}")
 
@@ -652,6 +663,7 @@ class GUI_MakerMixin(object):
             if NAME in options:
                 lblname = options[NAME]
                 del options[NAME]
+
             if PHOTOIMAGE in options:
                 imageFile = options[PHOTOIMAGE]
                 rotation = 0
@@ -664,6 +676,12 @@ class GUI_MakerMixin(object):
                 if lblname is not None:
                     self.createAttr(lblname + "PhotoImage", photoimage)
 
+            try:# delete redundant text nodes if textvariable is present on the label
+                if str(options[TEXTVARIABLE]) != 'None':
+                    t = element.find('text')
+                    if t is not None:
+                        element.remove(t)
+            except: pass
 
         return options
 
